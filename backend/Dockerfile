@@ -1,0 +1,15 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY backend/requirements.txt /app/backend/requirements.txt
+RUN pip install --no-cache-dir -r /app/backend/requirements.txt
+
+COPY backend /app/backend
+COPY ["quiz (5).sql", "/app/quiz (5).sql"]
+
+ENV QUIZ_DB_PATH=/data/quiz.db
+EXPOSE 8000
+
+WORKDIR /app/backend
+CMD ["python", "-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]

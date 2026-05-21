@@ -2,8 +2,11 @@ import sqlite3
 import os
 import re
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "quiz.db")
-SQL_FILE = os.path.join(os.path.dirname(__file__), "..", "quiz (5).sql")
+DB_PATH = os.environ.get("QUIZ_DB_PATH", os.path.join(os.path.dirname(__file__), "quiz.db"))
+SQL_FILE = os.environ.get(
+    "QUIZ_SQL_FILE",
+    os.path.join(os.path.dirname(__file__), "..", "quiz (5).sql"),
+)
 
 
 def get_db():
