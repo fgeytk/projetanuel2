@@ -1,8 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from database import get_db, init_db
 import random
+import os
+import hashlib
 
 
 class QuestionPayload(BaseModel):
@@ -14,6 +16,14 @@ class QuestionPayload(BaseModel):
     reponse_fausse2: str = Field(..., min_length=1)
     reponse_fausse3: str = Field(..., min_length=1)
 
+
+class AuthPayload(BaseModel):
+    password: str
+
+
+ADMIN_PASSWORD_HASH = os.getenv('ADMIN_PASSWORD_HASH', hashlib.sha256(b'admin').hexdigest())
+ADMIN_TOKEN = "admin_access_token_12345"
+
 app = FastAPI()
 
 app.add_middleware(
@@ -24,6 +34,15 @@ app.add_middleware(
 )
 
 init_db()
+
+
+def verify_admin_token(authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token manquant")
+    token = authorization.split(" ")[1]
+    if token != ADMIN_TOKEN:
+        raise HTTPException(status_code=401, detail="Token invalide")
+    return token
 
 
 def row_to_question(row):
@@ -104,8 +123,16 @@ def check_answer(payload: dict):
     }
 
 
+@app.post("/api/admin/auth")
+def authenticate(payload: AuthPayload):
+    password_hash = hashlib.sha256(payload.password.encode()).hexdigest()
+    if password_hash != ADMIN_PASSWORD_HASH:
+        raise HTTPException(status_code=401, detail="Mot de passe incorrect")
+    return {"token": ADMIN_TOKEN}
+
+
 @app.get("/api/admin/questions")
-def list_questions():
+def list_questions(token: str = Depends(verify_admin_token)):
     conn = get_db()
     rows = conn.execute(
         """
@@ -119,7 +146,7 @@ def list_questions():
 
 
 @app.post("/api/admin/questions", status_code=201)
-def create_question(payload: QuestionPayload):
+def create_question(payload: QuestionPayload, token: str = Depends(verify_admin_token)):
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
@@ -155,7 +182,7 @@ def create_question(payload: QuestionPayload):
 
 
 @app.put("/api/admin/questions/{question_id}")
-def update_question(question_id: int, payload: QuestionPayload):
+def update_question(question_id: int, payload: QuestionPayload, token: str = Depends(verify_admin_token)):
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
@@ -195,7 +222,7 @@ def update_question(question_id: int, payload: QuestionPayload):
 
 
 @app.delete("/api/admin/questions/{question_id}", status_code=204)
-def delete_question(question_id: int):
+def delete_question(question_id: int, token: str = Depends(verify_admin_token)):
     conn = get_db()
     cur = conn.cursor()
     cur.execute("DELETE FROM question WHERE id_question = ?", (question_id,))

@@ -12,6 +12,67 @@ const emptyForm = {
   reponse_fausse3: '',
 }
 
+function LoginForm({ onSuccess }) {
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      const response = await fetch(`${API}/admin/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.detail || 'Mot de passe incorrect')
+        return
+      }
+
+      localStorage.setItem('adminToken', data.token)
+      onSuccess()
+    } catch (err) {
+      setError('Erreur de connexion')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <main className="admin">
+      <section className="admin-section" style={{ maxWidth: '400px', margin: '50px auto' }}>
+        <h2>Acces BackOffice</h2>
+        <form onSubmit={handleSubmit}>
+          <label className="form-field">
+            Mot de passe
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Entrez le mot de passe"
+              required
+              disabled={loading}
+            />
+          </label>
+          <div className="button-row">
+            <button type="submit" className="button button--primary" disabled={loading}>
+              {loading ? 'Verification...' : 'Acceder'}
+            </button>
+          </div>
+        </form>
+        {error && <p className="message" style={{ color: '#d32f2f' }}>{error}</p>}
+      </section>
+    </main>
+  )
+}
+
 function Field({ label, name, value, onChange, type = 'text' }) {
   return (
     <label className="form-field">
@@ -33,17 +94,32 @@ export default function BackOffice() {
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [message, setMessage] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('adminToken'))
 
   const loadQuestions = () => {
-    fetch(`${API}/admin/questions`)
-      .then((r) => r.json())
+    const token = localStorage.getItem('adminToken')
+    fetch(`${API}/admin/questions`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then((r) => {
+        if (r.status === 401) {
+          localStorage.removeItem('adminToken')
+          setIsAuthenticated(false)
+        }
+        return r.json()
+      })
       .then(setQuestions)
   }
 
   useEffect(() => {
-    // On charge la liste admin quand le back-office arrive a l'ecran.
-    loadQuestions()
-  }, [])
+    if (isAuthenticated) {
+      loadQuestions()
+    }
+  }, [isAuthenticated])
+
+  if (!isAuthenticated) {
+    return <LoginForm onSuccess={() => setIsAuthenticated(true)} />
+  }
 
   const handleFormChange = (event) => {
     const { name, value, type } = event.target
@@ -64,10 +140,14 @@ export default function BackOffice() {
     // Le meme formulaire sert pour l'ajout et la modification.
     const method = editingId ? 'PUT' : 'POST'
     const url = editingId ? `${API}/admin/questions/${editingId}` : `${API}/admin/questions`
+    const token = localStorage.getItem('adminToken')
 
     fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(form),
     })
       .then(async (r) => {
@@ -105,7 +185,11 @@ export default function BackOffice() {
       return
     }
 
-    fetch(`${API}/admin/questions/${id}`, { method: 'DELETE' })
+    const token = localStorage.getItem('adminToken')
+    fetch(`${API}/admin/questions/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then((r) => {
         if (!r.ok) {
           throw new Error('Suppression impossible')
