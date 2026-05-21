@@ -28,6 +28,34 @@ projetanuel2/
 └── quiz (5).sql
 ```
 
+## Schema Docker
+
+```text
+Navigateur
+    |
+    | http://localhost:3000
+    v
+Frontend React / Vite
+conteneur: frontend
+port: 3000
+    |
+    | proxy /api vers http://backend:8000
+    v
+Backend FastAPI / Uvicorn
+conteneur: backend
+port: 8000
+    |
+    | lit et ecrit
+    v
+Volume Docker quiz-data
+fichier: /data/quiz.db
+    ^
+    |
+    | import au premier lancement si la base est vide
+    |
+quiz (5).sql
+```
+
 ## Lancement avec Docker
 
 ```powershell
@@ -58,6 +86,24 @@ docker compose up --build
 | GET     | `/api/categories`               | Liste des categories distinctes     |
 | GET     | `/api/question?categorie=<cat>` | Question aleatoire filtree ou non   |
 | POST    | `/api/answer`                   | Verifie une reponse `{id, answer}`  |
+
+## Back-office admin
+
+Le bouton `Admin` dans l'interface ouvre un back-office pour gerer les questions :
+
+- creer une question
+- modifier une question existante
+- supprimer une question
+- consulter toutes les questions de la base
+
+Endpoints utilises par le back-office :
+
+| Methode | Endpoint                         | Description              |
+|---------|----------------------------------|--------------------------|
+| GET     | `/api/admin/questions`           | Liste toutes les questions |
+| POST    | `/api/admin/questions`           | Cree une question        |
+| PUT     | `/api/admin/questions/{id}`      | Modifie une question     |
+| DELETE  | `/api/admin/questions/{id}`      | Supprime une question    |
 
 ## Donnees
 

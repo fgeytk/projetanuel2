@@ -1,0 +1,182 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f8fafc;
+  color: #1f2937;
+  font-family: Arial, sans-serif;
+}
+
+.app {
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 0 16px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.app-header h1 {
+  margin: 0;
+}
+
+.tabs,
+.button-row {
+  display: flex;
+  gap: 8px;
+}
+
+.button-row {
+  flex-wrap: wrap;
+}
+
+.button {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #1f2937;
+  cursor: pointer;
+  font: inherit;
+}
+
+.button:disabled {
+  cursor: default;
+}
+
+.button--primary {
+  background: #0f172a;
+  color: #fff;
+}
+
+.button--danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.tab-button--active {
+  background: #e0f2fe;
+}
+
+.quiz,
+.admin {
+  margin-top: 32px;
+}
+
+.quiz--selection {
+  max-width: 640px;
+}
+
+.quiz--question {
+  max-width: 720px;
+}
+
+.list-button,
+.answer-button {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.answer-button {
+  background: #f8fafc;
+}
+
+.answer-button--correct {
+  background: #bbf7d0;
+}
+
+.answer-button--wrong {
+  background: #fecaca;
+}
+
+.quiz-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.points {
+  margin-bottom: 8px;
+  color: #64748b;
+}
+
+.feedback {
+  margin-top: 16px;
+}
+
+.message {
+  font-weight: 700;
+}
+
+.message--success {
+  color: #15803d;
+}
+
+.message--error {
+  color: #b91c1c;
+}
+
+.admin-section {
+  margin-bottom: 32px;
+}
+
+.question-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.form-field {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.form-field input {
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+th {
+  border-bottom: 2px solid #cbd5e1;
+  text-align: left;
+}
+
+td {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+th,
+td {
+  padding: 8px;
+}
+
+@media (max-width: 640px) {
+  .app-header,
+  .quiz-meta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
