@@ -21,6 +21,11 @@ projetanuel2/
 ├── frontend/
 │   ├── Dockerfile
 │   ├── src/
+│   │   ├── App.jsx
+│   │   ├── FrontOffice.jsx
+│   │   ├── BackOffice.jsx
+│   │   ├── App.css
+│   │   └── main.jsx
 │   ├── index.html
 │   ├── vite.config.js
 │   └── package.json
@@ -104,6 +109,16 @@ Endpoints utilises par le back-office :
 | POST    | `/api/admin/questions`           | Cree une question        |
 | PUT     | `/api/admin/questions/{id}`      | Modifie une question     |
 | DELETE  | `/api/admin/questions/{id}`      | Supprime une question    |
+
+## Frontend
+
+Le frontend est separe en plusieurs fichiers :
+
+- `frontend/src/App.jsx` : navigation entre le quiz et l'admin
+- `frontend/src/FrontOffice.jsx` : selection de categorie, affichage des questions, score et feedback
+- `frontend/src/BackOffice.jsx` : formulaire CRUD et tableau de gestion des questions
+
+Les styles sont centralises dans `frontend/src/App.css`.
 
 ## Donnees
 
