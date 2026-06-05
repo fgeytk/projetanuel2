@@ -9,7 +9,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Quiz MVP</h1>
+        <h1 className="app-title">Quiz Brain</h1>
         <nav className="tabs">
           <button
             onClick={() => setView('quiz')}
