@@ -1,15 +1,54 @@
-import { useEffect, useState } from 'react'
-
-const API = '/api'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  checkAdminSession,
+  createQuestion,
+  deleteQuestion,
+  fetchAdminQuestions,
+  importAdminQuestions,
+  loginAdmin,
+  logoutAdmin,
+  resetAdminQuestions,
+  updateQuestion,
+} from './lib/api.js'
 
 const emptyForm = {
-  categorie: '',
-  nb_point: 5,
-  question: '',
-  reponse_vrai: '',
-  reponse_fausse1: '',
-  reponse_fausse2: '',
-  reponse_fausse3: '',
+  category: '',
+  points: 10,
+  prompt: '',
+  correctAnswer: '',
+  wrongAnswers: ['', '', ''],
+}
+
+function cleanQuestion(question) {
+  return {
+    category: question.category.trim(),
+    points: Number(question.points),
+    prompt: question.prompt.trim(),
+    correctAnswer: question.correctAnswer.trim(),
+    wrongAnswers: question.wrongAnswers.map((answer) => answer.trim()),
+  }
+}
+
+function isValidQuestion(question) {
+  return (
+    question.category &&
+    question.prompt &&
+    question.correctAnswer &&
+    Number.isFinite(question.points) &&
+    question.points > 0 &&
+    question.wrongAnswers.length === 3 &&
+    question.wrongAnswers.every(Boolean)
+  )
+}
+
+function toFormQuestion(question) {
+  return {
+    category: question.category,
+    points: question.points,
+    prompt: question.prompt,
+    correctAnswer: question.correctAnswer,
+    wrongAnswers: [...question.wrongAnswers],
+  }
 }
 
 function LoginForm({ onSuccess }) {
@@ -17,254 +56,432 @@ function LoginForm({ onSuccess }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
+  async function handleSubmit(event) {
+    event.preventDefault()
     setLoading(true)
+    setError('')
 
     try {
-      const response = await fetch(`${API}/admin/auth`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.detail || 'Mot de passe incorrect')
-        return
-      }
-
-      localStorage.setItem('adminToken', data.token)
+      await loginAdmin(password)
       onSuccess()
     } catch (err) {
-      setError('Erreur de connexion')
+      setError(err.message || 'Connexion impossible')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <main className="admin">
-      <section className="admin-section" style={{ maxWidth: '400px', margin: '50px auto' }}>
-        <h2>Acces BackOffice</h2>
-        <form onSubmit={handleSubmit}>
+    <main className="page-grid">
+      <section className="admin-login">
+        <p className="eyebrow">Administration</p>
+        <h2>Acces back-office</h2>
+
+        <form onSubmit={handleSubmit} className="stack-form">
           <label className="form-field">
             Mot de passe
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Entrez le mot de passe"
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
               required
-              disabled={loading}
             />
           </label>
-          <div className="button-row">
-            <button type="submit" className="button button--primary" disabled={loading}>
-              {loading ? 'Verification...' : 'Acceder'}
-            </button>
-          </div>
+
+          {error && <p className="form-error">{error}</p>}
+
+          <button type="submit" className="button button--primary" disabled={loading}>
+            {loading ? 'Connexion...' : 'Se connecter'}
+          </button>
         </form>
-        {error && <p className="message" style={{ color: '#d32f2f' }}>{error}</p>}
       </section>
     </main>
   )
 }
 
-function Field({ label, name, value, onChange, type = 'text' }) {
+function TextField({ label, value, onChange, type = 'text' }) {
   return (
     <label className="form-field">
       {label}
-      <input
-        name={name}
-        type={type}
-        value={value}
-        onChange={onChange}
-        required
-        min={type === 'number' ? 1 : undefined}
-      />
+      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} required />
     </label>
   )
 }
 
-export default function BackOffice() {
+export default function BackOffice({ categories, onDataChange }) {
+  const fileInputRef = useRef(null)
+  const [authenticated, setAuthenticated] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
   const [questions, setQuestions] = useState([])
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
+  const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('all')
   const [message, setMessage] = useState('')
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('adminToken'))
+  const [loading, setLoading] = useState(false)
 
-  const loadQuestions = () => {
-    const token = localStorage.getItem('adminToken')
-    fetch(`${API}/admin/questions`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then((r) => {
-        if (r.status === 401) {
-          localStorage.removeItem('adminToken')
-          setIsAuthenticated(false)
+  const filteredQuestions = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase()
+
+    return questions
+      .filter((question) => categoryFilter === 'all' || question.category === categoryFilter)
+      .filter((question) => {
+        if (!normalizedSearch) {
+          return true
         }
-        return r.json()
+
+        return `${question.prompt} ${question.category} ${question.correctAnswer}`
+          .toLowerCase()
+          .includes(normalizedSearch)
       })
-      .then(setQuestions)
+      .sort((a, b) => b.id - a.id)
+  }, [questions, search, categoryFilter])
+
+  async function loadQuestions() {
+    setLoading(true)
+    setMessage('')
+
+    try {
+      const data = await fetchAdminQuestions()
+      setQuestions(data)
+      setAuthenticated(true)
+    } catch (err) {
+      setAuthenticated(false)
+      setMessage(err.message || 'Impossible de charger les questions')
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
-    if (isAuthenticated) {
+    async function verifySession() {
+      setCheckingSession(true)
+
+      try {
+        await checkAdminSession()
+        setAuthenticated(true)
+      } catch {
+        setAuthenticated(false)
+      } finally {
+        setCheckingSession(false)
+      }
+    }
+
+    verifySession()
+  }, [])
+
+  useEffect(() => {
+    if (authenticated) {
       loadQuestions()
     }
-  }, [isAuthenticated])
+  }, [authenticated])
 
-  if (!isAuthenticated) {
-    return <LoginForm onSuccess={() => setIsAuthenticated(true)} />
+  if (checkingSession) {
+    return (
+      <main className="page-grid">
+        <section className="admin-login">
+          <p className="eyebrow">Administration</p>
+          <h2>Verification de la session...</h2>
+        </section>
+      </main>
+    )
   }
 
-  const handleFormChange = (event) => {
-    const { name, value, type } = event.target
+  if (!authenticated) {
+    return <LoginForm onSuccess={() => setAuthenticated(true)} />
+  }
+
+  function updateWrongAnswer(index, value) {
     setForm((current) => ({
       ...current,
-      [name]: type === 'number' ? Number(value) : value,
+      wrongAnswers: current.wrongAnswers.map((answer, answerIndex) => (
+        answerIndex === index ? value : answer
+      )),
     }))
   }
 
-  const resetForm = () => {
+  function resetForm() {
     setForm(emptyForm)
     setEditingId(null)
   }
 
-  const handleSubmitQuestion = (event) => {
+  async function handleSubmit(event) {
     event.preventDefault()
 
-    // Le meme formulaire sert pour l'ajout et la modification.
-    const method = editingId ? 'PUT' : 'POST'
-    const url = editingId ? `${API}/admin/questions/${editingId}` : `${API}/admin/questions`
-    const token = localStorage.getItem('adminToken')
+    const question = cleanQuestion(form)
+    if (!isValidQuestion(question)) {
+      setMessage('Tous les champs sont obligatoires.')
+      return
+    }
 
-    fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(form),
-    })
-      .then(async (r) => {
-        if (!r.ok) {
-          const error = await r.json()
-          throw new Error(error.detail || 'Erreur API')
-        }
-        return r.json()
-      })
-      .then(() => {
-        setMessage(editingId ? 'Question modifiee.' : 'Question ajoutee.')
-        resetForm()
-        loadQuestions()
-      })
-      .catch((error) => setMessage(error.message))
+    setLoading(true)
+    setMessage('')
+
+    try {
+      if (editingId) {
+        const updated = await updateQuestion(editingId, question)
+        setQuestions((current) => current.map((item) => (item.id === editingId ? updated : item)))
+        setMessage('Question modifiee.')
+      } else {
+        const created = await createQuestion(question)
+        setQuestions((current) => [created, ...current])
+        setMessage('Question ajoutee.')
+      }
+
+      resetForm()
+      await onDataChange()
+    } catch (err) {
+      setMessage(err.message || 'Enregistrement impossible')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleEdit = (item) => {
-    // On remet les valeurs de la ligne dans le formulaire pour pouvoir les modifier.
-    setEditingId(item.id)
-    setForm({
-      categorie: item.categorie,
-      nb_point: item.nb_point,
-      question: item.question,
-      reponse_vrai: item.reponse_vrai,
-      reponse_fausse1: item.reponse_fausse1,
-      reponse_fausse2: item.reponse_fausse2,
-      reponse_fausse3: item.reponse_fausse3,
-    })
+  function handleEdit(question) {
+    setEditingId(question.id)
+    setForm(toFormQuestion(question))
     setMessage('')
   }
 
-  const handleDelete = (id) => {
+  async function handleDelete(questionId) {
     if (!window.confirm('Supprimer cette question ?')) {
       return
     }
 
-    const token = localStorage.getItem('adminToken')
-    fetch(`${API}/admin/questions/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then((r) => {
-        if (!r.ok) {
-          throw new Error('Suppression impossible')
-        }
-      })
-      .then(() => {
-        setMessage('Question supprimee.')
-        loadQuestions()
-        if (editingId === id) {
-          resetForm()
-        }
-      })
-      .catch((error) => setMessage(error.message))
+    setLoading(true)
+    setMessage('')
+
+    try {
+      await deleteQuestion(questionId)
+      setQuestions((current) => current.filter((question) => question.id !== questionId))
+      if (editingId === questionId) {
+        resetForm()
+      }
+      setMessage('Question supprimee.')
+      await onDataChange()
+    } catch (err) {
+      setMessage(err.message || 'Suppression impossible')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleResetData() {
+    if (!window.confirm('Remettre les questions initiales ?')) {
+      return
+    }
+
+    setLoading(true)
+    setMessage('')
+
+    try {
+      const data = await resetAdminQuestions()
+      setQuestions(data)
+      resetForm()
+      setMessage('Questions initiales restaurees.')
+      await onDataChange()
+    } catch (err) {
+      setMessage(err.message || 'Reset impossible')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      await logoutAdmin()
+    } finally {
+      setQuestions([])
+      setMessage('')
+      resetForm()
+    }
+    setAuthenticated(false)
+  }
+
+  function exportData() {
+    const blob = new Blob([JSON.stringify(questions, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'quiz-questions.json'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function importData(event) {
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    setLoading(true)
+    setMessage('')
+
+    try {
+      const raw = await file.text()
+      const parsed = JSON.parse(raw)
+
+      if (!Array.isArray(parsed)) {
+        throw new Error('Format JSON invalide')
+      }
+
+      const imported = parsed.map(cleanQuestion)
+      if (!imported.every(isValidQuestion)) {
+        throw new Error('Une ou plusieurs questions sont incompletes')
+      }
+
+      const data = await importAdminQuestions(imported)
+      setQuestions(data)
+      resetForm()
+      setMessage(`${data.length} questions importees.`)
+      await onDataChange()
+    } catch (err) {
+      setMessage(err.message || 'Import impossible')
+    } finally {
+      event.target.value = ''
+      setLoading(false)
+    }
   }
 
   return (
-    <main className="admin">
-      <section className="admin-section">
-        <h2>{editingId ? 'Modifier une question' : 'Ajouter une question'}</h2>
-        <form onSubmit={handleSubmitQuestion} className="question-form">
-          <Field label="Categorie" name="categorie" value={form.categorie} onChange={handleFormChange} />
-          <Field label="Points" name="nb_point" type="number" value={form.nb_point} onChange={handleFormChange} />
-          <Field label="Question" name="question" value={form.question} onChange={handleFormChange} />
-          <Field label="Bonne reponse" name="reponse_vrai" value={form.reponse_vrai} onChange={handleFormChange} />
-          <Field label="Mauvaise reponse 1" name="reponse_fausse1" value={form.reponse_fausse1} onChange={handleFormChange} />
-          <Field label="Mauvaise reponse 2" name="reponse_fausse2" value={form.reponse_fausse2} onChange={handleFormChange} />
-          <Field label="Mauvaise reponse 3" name="reponse_fausse3" value={form.reponse_fausse3} onChange={handleFormChange} />
+    <main className="admin-layout">
+      <section className="admin-toolbar">
+        <div>
+          <p className="eyebrow">Back-office</p>
+          <h2>Gestion des questions</h2>
+        </div>
+
+        <div className="button-row">
+          <button type="button" className="button" onClick={exportData} disabled={loading}>
+            Export JSON
+          </button>
+          <button type="button" className="button" onClick={() => fileInputRef.current?.click()} disabled={loading}>
+            Import JSON
+          </button>
+          <button type="button" className="button button--danger" onClick={handleResetData} disabled={loading}>
+            Reset
+          </button>
+          <button type="button" className="button" onClick={handleLogout}>
+            Deconnexion
+          </button>
+          <input ref={fileInputRef} type="file" accept="application/json" hidden onChange={importData} />
+        </div>
+      </section>
+
+      <section className="admin-grid">
+        <form className="question-form" onSubmit={handleSubmit}>
+          <div className="section-heading">
+            <p className="eyebrow">{editingId ? `Question #${editingId}` : 'Nouvelle question'}</p>
+            <h3>{editingId ? 'Modifier' : 'Ajouter'}</h3>
+          </div>
+
+          <TextField
+            label="Categorie"
+            value={form.category}
+            onChange={(value) => setForm((current) => ({ ...current, category: value }))}
+          />
+          <TextField
+            label="Points"
+            type="number"
+            value={form.points}
+            onChange={(value) => setForm((current) => ({ ...current, points: Number(value) }))}
+          />
+          <label className="form-field form-field--wide">
+            Question
+            <textarea
+              value={form.prompt}
+              onChange={(event) => setForm((current) => ({ ...current, prompt: event.target.value }))}
+              required
+            />
+          </label>
+          <TextField
+            label="Bonne reponse"
+            value={form.correctAnswer}
+            onChange={(value) => setForm((current) => ({ ...current, correctAnswer: value }))}
+          />
+          {form.wrongAnswers.map((answer, index) => (
+            <TextField
+              key={index}
+              label={`Mauvaise reponse ${index + 1}`}
+              value={answer}
+              onChange={(value) => updateWrongAnswer(index, value)}
+            />
+          ))}
+
+          {message && <p className="form-message">{message}</p>}
+
           <div className="button-row">
-            <button type="submit" className="button button--primary">
+            <button type="submit" className="button button--primary" disabled={loading}>
               {editingId ? 'Enregistrer' : 'Ajouter'}
             </button>
             {editingId && (
-              <button type="button" onClick={resetForm} className="button">
+              <button type="button" className="button" onClick={resetForm} disabled={loading}>
                 Annuler
               </button>
             )}
           </div>
         </form>
-        {message && <p className="message">{message}</p>}
-      </section>
 
-      <section>
-        <h2>Questions ({questions.length})</h2>
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                {['ID', 'Categorie', 'Pts', 'Question', 'Bonne reponse', 'Actions'].map((header) => (
-                  <th key={header}>{header}</th>
+        <section className="question-list">
+          <div className="list-controls">
+            <label className="form-field">
+              Recherche
+              <input value={search} onChange={(event) => setSearch(event.target.value)} />
+            </label>
+            <label className="form-field">
+              Categorie
+              <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
+                <option value="all">Toutes</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {questions.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.id}</td>
-                  <td>{item.categorie}</td>
-                  <td>{item.nb_point}</td>
-                  <td>{item.question}</td>
-                  <td>{item.reponse_vrai}</td>
-                  <td>
-                    <div className="button-row">
-                      <button onClick={() => handleEdit(item)} className="button">
-                        Modifier
-                      </button>
-                      <button onClick={() => handleDelete(item.id)} className="button button--danger">
-                        Supprimer
-                      </button>
-                    </div>
-                  </td>
+              </select>
+            </label>
+          </div>
+
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Categorie</th>
+                  <th>Pts</th>
+                  <th>Question</th>
+                  <th>Reponse</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filteredQuestions.map((question) => (
+                  <tr key={question.id}>
+                    <td>{question.id}</td>
+                    <td>{question.category}</td>
+                    <td>{question.points}</td>
+                    <td>{question.prompt}</td>
+                    <td>{question.correctAnswer}</td>
+                    <td>
+                      <div className="button-row">
+                        <button type="button" className="button button--compact" onClick={() => handleEdit(question)}>
+                          Modifier
+                        </button>
+                        <button
+                          type="button"
+                          className="button button--compact button--danger"
+                          onClick={() => handleDelete(question.id)}
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </section>
     </main>
   )

@@ -1,0 +1,1154 @@
+[
+  {
+    "id": 1,
+    "category": "Géographie",
+    "points": 10,
+    "prompt": "Quelle est la capitale de la France ?",
+    "correctAnswer": "Paris",
+    "wrongAnswers": [
+      "Lyon",
+      "Marseille",
+      "Toulouse"
+    ]
+  },
+  {
+    "id": 2,
+    "category": "Histoire",
+    "points": 15,
+    "prompt": "En quelle année a eu lieu la Révolution française ?",
+    "correctAnswer": "1789",
+    "wrongAnswers": [
+      "1492",
+      "1914",
+      "1643"
+    ]
+  },
+  {
+    "id": 3,
+    "category": "Sciences",
+    "points": 20,
+    "prompt": "Quel est l'élément chimique de symbole O ?",
+    "correctAnswer": "Oxygène",
+    "wrongAnswers": [
+      "Or",
+      "Osmium",
+      "Oganesson"
+    ]
+  },
+  {
+    "id": 4,
+    "category": "Cinéma",
+    "points": 10,
+    "prompt": "Qui a réalisé le film \"Inception\" ?",
+    "correctAnswer": "Christopher Nolan",
+    "wrongAnswers": [
+      "Steven Spielberg",
+      "Quentin Tarantino",
+      "Martin Scorsese"
+    ]
+  },
+  {
+    "id": 5,
+    "category": "Musique",
+    "points": 15,
+    "prompt": "Quel groupe a sorti l'album \"The Dark Side of the Moon\" ?",
+    "correctAnswer": "Pink Floyd",
+    "wrongAnswers": [
+      "The Beatles",
+      "Led Zeppelin",
+      "Queen"
+    ]
+  },
+  {
+    "id": 6,
+    "category": "Technologie",
+    "points": 20,
+    "prompt": "Quelle entreprise a développé le système d'exploitation Android ?",
+    "correctAnswer": "Google",
+    "wrongAnswers": [
+      "Microsoft",
+      "Apple",
+      "Samsung"
+    ]
+  },
+  {
+    "id": 7,
+    "category": "Sports",
+    "points": 10,
+    "prompt": "Combien de joueurs composent une équipe de football sur le terrain ?",
+    "correctAnswer": "11",
+    "wrongAnswers": [
+      "10",
+      "9",
+      "12"
+    ]
+  },
+  {
+    "id": 8,
+    "category": "Littérature",
+    "points": 15,
+    "prompt": "Qui a écrit \"1984\" ?",
+    "correctAnswer": "George Orwell",
+    "wrongAnswers": [
+      "Aldous Huxley",
+      "Ray Bradbury",
+      "Jules Verne"
+    ]
+  },
+  {
+    "id": 9,
+    "category": "Nature",
+    "points": 10,
+    "prompt": "Quel est l'animal le plus grand du monde ?",
+    "correctAnswer": "Baleine bleue",
+    "wrongAnswers": [
+      "Éléphant d'Afrique",
+      "Girafe",
+      "Requin baleine"
+    ]
+  },
+  {
+    "id": 10,
+    "category": "Gastronomie",
+    "points": 5,
+    "prompt": "De quel pays vient la pizza Margherita ?",
+    "correctAnswer": "Italie",
+    "wrongAnswers": [
+      "France",
+      "Espagne",
+      "Grèce"
+    ]
+  },
+  {
+    "id": 11,
+    "category": "Géographie",
+    "points": 10,
+    "prompt": "Quel est le plus long fleuve du monde ?",
+    "correctAnswer": "Nil",
+    "wrongAnswers": [
+      "Amazon",
+      "Yangtsé",
+      "Mississippi"
+    ]
+  },
+  {
+    "id": 12,
+    "category": "Histoire",
+    "points": 15,
+    "prompt": "Qui était le premier président des États-Unis ?",
+    "correctAnswer": "George Washington",
+    "wrongAnswers": [
+      "Thomas Jefferson",
+      "Abraham Lincoln",
+      "John Adams"
+    ]
+  },
+  {
+    "id": 13,
+    "category": "Sciences",
+    "points": 20,
+    "prompt": "Quel est l’organe principal du système nerveux ?",
+    "correctAnswer": "Cerveau",
+    "wrongAnswers": [
+      "Cœur",
+      "Foie",
+      "Poumons"
+    ]
+  },
+  {
+    "id": 14,
+    "category": "Cinéma",
+    "points": 10,
+    "prompt": "Quel film a remporté l’Oscar du meilleur film en 2020 ?",
+    "correctAnswer": "Parasite",
+    "wrongAnswers": [
+      "1917",
+      "Joker",
+      "Once Upon a Time in Hollywood"
+    ]
+  },
+  {
+    "id": 15,
+    "category": "Musique",
+    "points": 15,
+    "prompt": "Quel chanteur est surnommé \"The King of Pop\" ?",
+    "correctAnswer": "Michael Jackson",
+    "wrongAnswers": [
+      "Elvis Presley",
+      "Prince",
+      "Freddie Mercury"
+    ]
+  },
+  {
+    "id": 16,
+    "category": "Technologie",
+    "points": 20,
+    "prompt": "Quelle société a créé le système d’exploitation Windows ?",
+    "correctAnswer": "Microsoft",
+    "wrongAnswers": [
+      "IBM",
+      "Apple",
+      "Google"
+    ]
+  },
+  {
+    "id": 17,
+    "category": "Sports",
+    "points": 10,
+    "prompt": "Combien de minutes dure un match de football (hors prolongations) ?",
+    "correctAnswer": "90",
+    "wrongAnswers": [
+      "80",
+      "100",
+      "120"
+    ]
+  },
+  {
+    "id": 18,
+    "category": "Littérature",
+    "points": 15,
+    "prompt": "Qui a écrit \"Le Petit Prince\" ?",
+    "correctAnswer": "Antoine de Saint-Exupéry",
+    "wrongAnswers": [
+      "Victor Hugo",
+      "Marcel Proust",
+      "Albert Camus"
+    ]
+  },
+  {
+    "id": 19,
+    "category": "Nature",
+    "points": 10,
+    "prompt": "Quel est l’animal terrestre le plus rapide ?",
+    "correctAnswer": "Guépard",
+    "wrongAnswers": [
+      "Lion",
+      "Antilope",
+      "Panthère"
+    ]
+  },
+  {
+    "id": 20,
+    "category": "Gastronomie",
+    "points": 5,
+    "prompt": "Quelle spécialité est originaire du Japon ?",
+    "correctAnswer": "Sushi",
+    "wrongAnswers": [
+      "Tacos",
+      "Pizza",
+      "Couscous"
+    ]
+  },
+  {
+    "id": 21,
+    "category": "Géographie",
+    "points": 10,
+    "prompt": "Quel pays possède la plus grande superficie ?",
+    "correctAnswer": "Russie",
+    "wrongAnswers": [
+      "Chine",
+      "Canada",
+      "États-Unis"
+    ]
+  },
+  {
+    "id": 22,
+    "category": "Géographie",
+    "points": 15,
+    "prompt": "Quelle est la capitale du Canada ?",
+    "correctAnswer": "Ottawa",
+    "wrongAnswers": [
+      "Toronto",
+      "Vancouver",
+      "Montréal"
+    ]
+  },
+  {
+    "id": 23,
+    "category": "Géographie",
+    "points": 20,
+    "prompt": "Quel désert est le plus grand du monde ?",
+    "correctAnswer": "Antarctique",
+    "wrongAnswers": [
+      "Sahara",
+      "Gobi",
+      "Kalahari"
+    ]
+  },
+  {
+    "id": 25,
+    "category": "Histoire",
+    "points": 15,
+    "prompt": "En quelle année a commencé la Première Guerre mondiale ?",
+    "correctAnswer": "1914",
+    "wrongAnswers": [
+      "1918",
+      "1939",
+      "1945"
+    ]
+  },
+  {
+    "id": 26,
+    "category": "Histoire",
+    "points": 20,
+    "prompt": "Quel empire est tombé en 476 après J.-C. ?",
+    "correctAnswer": "Empire romain",
+    "wrongAnswers": [
+      "Empire ottoman",
+      "Empire byzantin",
+      "Empire perse"
+    ]
+  },
+  {
+    "id": 27,
+    "category": "Sciences",
+    "points": 10,
+    "prompt": "Quelle est la planète la plus proche du Soleil ?",
+    "correctAnswer": "Mercure",
+    "wrongAnswers": [
+      "Vénus",
+      "Mars",
+      "Terre"
+    ]
+  },
+  {
+    "id": 28,
+    "category": "Sciences",
+    "points": 15,
+    "prompt": "Quel est l'élément chimique de symbole H ?",
+    "correctAnswer": "Hydrogène",
+    "wrongAnswers": [
+      "Hélium",
+      "Mercure",
+      "Oxygène"
+    ]
+  },
+  {
+    "id": 29,
+    "category": "Sciences",
+    "points": 20,
+    "prompt": "Combien de chromosomes possède un humain ?",
+    "correctAnswer": "46",
+    "wrongAnswers": [
+      "23",
+      "44",
+      "48"
+    ]
+  },
+  {
+    "id": 30,
+    "category": "Cinéma",
+    "points": 10,
+    "prompt": "Qui a réalisé \"Jurassic Park\" ?",
+    "correctAnswer": "Steven Spielberg",
+    "wrongAnswers": [
+      "James Cameron",
+      "George Lucas",
+      "Peter Jackson"
+    ]
+  },
+  {
+    "id": 31,
+    "category": "Cinéma",
+    "points": 15,
+    "prompt": "Quel film met en scène un naufrage célèbre ?",
+    "correctAnswer": "Titanic",
+    "wrongAnswers": [
+      "Pirates des Caraïbes",
+      "Le Monde de Nemo",
+      "Waterworld"
+    ]
+  },
+  {
+    "id": 32,
+    "category": "Cinéma",
+    "points": 20,
+    "prompt": "Qui joue le rôle principal dans \"Forrest Gump\" ?",
+    "correctAnswer": "Tom Hanks",
+    "wrongAnswers": [
+      "Robin Williams",
+      "Leonardo DiCaprio",
+      "Brad Pitt"
+    ]
+  },
+  {
+    "id": 81,
+    "category": "Géographie",
+    "points": 20,
+    "prompt": "Quelle est la capitale de l’Azerbaïdjan ?",
+    "correctAnswer": "Bakou",
+    "wrongAnswers": [
+      "Erevan",
+      "Tbilissi",
+      "Tachkent"
+    ]
+  },
+  {
+    "id": 34,
+    "category": "Musique",
+    "points": 15,
+    "prompt": "Quel groupe a composé \"Bohemian Rhapsody\" ?",
+    "correctAnswer": "Queen",
+    "wrongAnswers": [
+      "The Beatles",
+      "The Rolling Stones",
+      "Led Zeppelin"
+    ]
+  },
+  {
+    "id": 35,
+    "category": "Musique",
+    "points": 20,
+    "prompt": "Quel chanteur est surnommé \"The Boss\" ?",
+    "correctAnswer": "Bruce Springsteen",
+    "wrongAnswers": [
+      "Billy Joel",
+      "Bob Dylan",
+      "Eric Clapton"
+    ]
+  },
+  {
+    "id": 36,
+    "category": "Technologie",
+    "points": 10,
+    "prompt": "Quel moteur de recherche appartient à Google ?",
+    "correctAnswer": "Google",
+    "wrongAnswers": [
+      "Bing",
+      "Yahoo",
+      "DuckDuckGo"
+    ]
+  },
+  {
+    "id": 37,
+    "category": "Technologie",
+    "points": 15,
+    "prompt": "Quelle entreprise développe l'iPhone ?",
+    "correctAnswer": "Apple",
+    "wrongAnswers": [
+      "Samsung",
+      "Huawei",
+      "Sony"
+    ]
+  },
+  {
+    "id": 38,
+    "category": "Technologie",
+    "points": 20,
+    "prompt": "En quelle année a été lancé Windows 95 ?",
+    "correctAnswer": "1995",
+    "wrongAnswers": [
+      "1990",
+      "2000",
+      "1998"
+    ]
+  },
+  {
+    "id": 39,
+    "category": "Sports",
+    "points": 10,
+    "prompt": "Combien de joueurs sur le terrain pour une équipe de basket ?",
+    "correctAnswer": "5",
+    "wrongAnswers": [
+      "6",
+      "7",
+      "4"
+    ]
+  },
+  {
+    "id": 40,
+    "category": "Sports",
+    "points": 15,
+    "prompt": "Combien de kilomètres fait un marathon ?",
+    "correctAnswer": "42,195",
+    "wrongAnswers": [
+      "40",
+      "45",
+      "50"
+    ]
+  },
+  {
+    "id": 41,
+    "category": "Sports",
+    "points": 20,
+    "prompt": "Qui a remporté la Coupe du Monde 2018 ?",
+    "correctAnswer": "France",
+    "wrongAnswers": [
+      "Croatie",
+      "Allemagne",
+      "Brésil"
+    ]
+  },
+  {
+    "id": 42,
+    "category": "Littérature",
+    "points": 10,
+    "prompt": "Qui a écrit \"Harry Potter\" ?",
+    "correctAnswer": "J.K. Rowling",
+    "wrongAnswers": [
+      "Stephen King",
+      "Suzanne Collins",
+      "Tolkien"
+    ]
+  },
+  {
+    "id": 43,
+    "category": "Littérature",
+    "points": 15,
+    "prompt": "Quel roman commence par \"Longtemps, je me suis couché de bonne heure\" ?",
+    "correctAnswer": "À la recherche du temps perdu",
+    "wrongAnswers": [
+      "Le Rouge et le Noir",
+      "Madame Bovary",
+      "Germinal"
+    ]
+  },
+  {
+    "id": 44,
+    "category": "Littérature",
+    "points": 20,
+    "prompt": "Qui a écrit \"Les Misérables\" ?",
+    "correctAnswer": "Victor Hugo",
+    "wrongAnswers": [
+      "Émile Zola",
+      "Balzac",
+      "Maupassant"
+    ]
+  },
+  {
+    "id": 45,
+    "category": "Nature",
+    "points": 10,
+    "prompt": "Quel animal est surnommé \"roi de la jungle\" ?",
+    "correctAnswer": "Lion",
+    "wrongAnswers": [
+      "Tigre",
+      "Éléphant",
+      "Guépard"
+    ]
+  },
+  {
+    "id": 46,
+    "category": "Nature",
+    "points": 15,
+    "prompt": "Quel est l'arbre le plus haut du monde ?",
+    "correctAnswer": "Séquoia",
+    "wrongAnswers": [
+      "Baobab",
+      "Chêne",
+      "Érable"
+    ]
+  },
+  {
+    "id": 47,
+    "category": "Nature",
+    "points": 20,
+    "prompt": "Quel est l'oiseau qui vole le plus vite ?",
+    "correctAnswer": "Faucon pèlerin",
+    "wrongAnswers": [
+      "Aigle royal",
+      "Hirondelle",
+      "Albatros"
+    ]
+  },
+  {
+    "id": 48,
+    "category": "Gastronomie",
+    "points": 5,
+    "prompt": "De quel pays vient le croissant ?",
+    "correctAnswer": "France",
+    "wrongAnswers": [
+      "Autriche",
+      "Belgique",
+      "Italie"
+    ]
+  },
+  {
+    "id": 49,
+    "category": "Gastronomie",
+    "points": 5,
+    "prompt": "Quelle est la boisson nationale du Japon ?",
+    "correctAnswer": "Saké",
+    "wrongAnswers": [
+      "Thé vert",
+      "Soju",
+      "Vin de riz"
+    ]
+  },
+  {
+    "id": 50,
+    "category": "Gastronomie",
+    "points": 5,
+    "prompt": "Quel fromage est italien ?",
+    "correctAnswer": "Mozzarella",
+    "wrongAnswers": [
+      "Brie",
+      "Roquefort",
+      "Cheddar"
+    ]
+  },
+  {
+    "id": 51,
+    "category": "Géographie",
+    "points": 20,
+    "prompt": "Quelle est la capitale du Bhoutan ?",
+    "correctAnswer": "Thimphou",
+    "wrongAnswers": [
+      "Kathmandu",
+      "Dacca",
+      "New Delhi"
+    ]
+  },
+  {
+    "id": 52,
+    "category": "Géographie",
+    "points": 20,
+    "prompt": "Quel pays enclavé est surnommé \"le toit de l'Afrique\" ?",
+    "correctAnswer": "Lesotho",
+    "wrongAnswers": [
+      "Swaziland",
+      "Rwanda",
+      "Ouganda"
+    ]
+  },
+  {
+    "id": 53,
+    "category": "Géographie",
+    "points": 20,
+    "prompt": "Quel est le plus long fleuve d'Asie ?",
+    "correctAnswer": "Yangtsé",
+    "wrongAnswers": [
+      "Mékong",
+      "Gange",
+      "Indus"
+    ]
+  },
+  {
+    "id": 54,
+    "category": "Histoire",
+    "points": 20,
+    "prompt": "En quelle année a eu lieu la chute de Constantinople ?",
+    "correctAnswer": "1453",
+    "wrongAnswers": [
+      "1492",
+      "1415",
+      "1517"
+    ]
+  },
+  {
+    "id": 55,
+    "category": "Histoire",
+    "points": 20,
+    "prompt": "Quel roi français fut surnommé \"le Roi Soleil\" ?",
+    "correctAnswer": "Louis XIV",
+    "wrongAnswers": [
+      "Louis XVI",
+      "François Ier",
+      "Henri IV"
+    ]
+  },
+  {
+    "id": 56,
+    "category": "Histoire",
+    "points": 20,
+    "prompt": "Qui était le premier empereur de Rome ?",
+    "correctAnswer": "Auguste",
+    "wrongAnswers": [
+      "César",
+      "Néron",
+      "Caligula"
+    ]
+  },
+  {
+    "id": 57,
+    "category": "Sciences",
+    "points": 20,
+    "prompt": "Quel est l’élément chimique de symbole W ?",
+    "correctAnswer": "Tungstène",
+    "wrongAnswers": [
+      "Platine",
+      "Titane",
+      "Wolfram"
+    ]
+  },
+  {
+    "id": 58,
+    "category": "Sciences",
+    "points": 20,
+    "prompt": "Comment s’appelle la plus grande lune de Saturne ?",
+    "correctAnswer": "Titan",
+    "wrongAnswers": [
+      "Europe",
+      "Ganymède",
+      "Io"
+    ]
+  },
+  {
+    "id": 59,
+    "category": "Sciences",
+    "points": 20,
+    "prompt": "Quelle unité mesure l’intensité d’un courant électrique ?",
+    "correctAnswer": "Ampère",
+    "wrongAnswers": [
+      "Volt",
+      "Watt",
+      "Ohm"
+    ]
+  },
+  {
+    "id": 60,
+    "category": "Cinéma",
+    "points": 20,
+    "prompt": "Qui a remporté l'Oscar du meilleur réalisateur en 2020 ?",
+    "correctAnswer": "Bong Joon-ho",
+    "wrongAnswers": [
+      "Sam Mendes",
+      "Todd Phillips",
+      "Quentin Tarantino"
+    ]
+  },
+  {
+    "id": 61,
+    "category": "Cinéma",
+    "points": 20,
+    "prompt": "Quel film de Christopher Nolan parle des rêves imbriqués ?",
+    "correctAnswer": "Inception",
+    "wrongAnswers": [
+      "Interstellar",
+      "Tenet",
+      "Memento"
+    ]
+  },
+  {
+    "id": 62,
+    "category": "Cinéma",
+    "points": 20,
+    "prompt": "Dans quel film le personnage Travis Bickle apparaît-il ?",
+    "correctAnswer": "Taxi Driver",
+    "wrongAnswers": [
+      "Goodfellas",
+      "Raging Bull",
+      "Heat"
+    ]
+  },
+  {
+    "id": 63,
+    "category": "Musique",
+    "points": 20,
+    "prompt": "Quel groupe a sorti l'album \"OK Computer\" ?",
+    "correctAnswer": "Radiohead",
+    "wrongAnswers": [
+      "Muse",
+      "Coldplay",
+      "Blur"
+    ]
+  },
+  {
+    "id": 64,
+    "category": "Musique",
+    "points": 20,
+    "prompt": "Qui est l'auteur-compositeur de \"Hallelujah\" ?",
+    "correctAnswer": "Leonard Cohen",
+    "wrongAnswers": [
+      "Jeff Buckley",
+      "Bob Dylan",
+      "Paul Simon"
+    ]
+  },
+  {
+    "id": 65,
+    "category": "Musique",
+    "points": 20,
+    "prompt": "Quel mouvement musical est associé au groupe Nirvana ?",
+    "correctAnswer": "Grunge",
+    "wrongAnswers": [
+      "Punk",
+      "Metal",
+      "Britpop"
+    ]
+  },
+  {
+    "id": 66,
+    "category": "Technologie",
+    "points": 20,
+    "prompt": "Quel langage est principalement utilisé pour les applications Android natives ?",
+    "correctAnswer": "Java",
+    "wrongAnswers": [
+      "Kotlin",
+      "Swift",
+      "Dart"
+    ]
+  },
+  {
+    "id": 67,
+    "category": "Technologie",
+    "points": 20,
+    "prompt": "Quel est le protocole de transfert de fichiers le plus ancien ?",
+    "correctAnswer": "FTP",
+    "wrongAnswers": [
+      "HTTP",
+      "SMTP",
+      "SSH"
+    ]
+  },
+  {
+    "id": 68,
+    "category": "Technologie",
+    "points": 20,
+    "prompt": "Quel est le premier ordinateur personnel vendu au public ?",
+    "correctAnswer": "Altair 8800",
+    "wrongAnswers": [
+      "Apple I",
+      "IBM PC",
+      "Commodore 64"
+    ]
+  },
+  {
+    "id": 69,
+    "category": "Sports",
+    "points": 20,
+    "prompt": "Combien de fois Rafael Nadal a-t-il gagné Roland-Garros ?",
+    "correctAnswer": "14",
+    "wrongAnswers": [
+      "12",
+      "13",
+      "15"
+    ]
+  },
+  {
+    "id": 70,
+    "category": "Sports",
+    "points": 20,
+    "prompt": "Quel pays a remporté la Coupe du Monde de rugby 2019 ?",
+    "correctAnswer": "Afrique du Sud",
+    "wrongAnswers": [
+      "Angleterre",
+      "Nouvelle-Zélande",
+      "Pays de Galles"
+    ]
+  },
+  {
+    "id": 71,
+    "category": "Sports",
+    "points": 20,
+    "prompt": "Quelle épreuve olympique combine ski de fond et tir ?",
+    "correctAnswer": "Biathlon",
+    "wrongAnswers": [
+      "Triathlon",
+      "Pentathlon",
+      "Decathlon"
+    ]
+  },
+  {
+    "id": 72,
+    "category": "Littérature",
+    "points": 20,
+    "prompt": "Qui a écrit \"Crime et Châtiment\" ?",
+    "correctAnswer": "Fiodor Dostoïevski",
+    "wrongAnswers": [
+      "Léon Tolstoï",
+      "Anton Tchekhov",
+      "Nicolas Gogol"
+    ]
+  },
+  {
+    "id": 73,
+    "category": "Littérature",
+    "points": 20,
+    "prompt": "Quel auteur français a écrit \"Le Comte de Monte-Cristo\" ?",
+    "correctAnswer": "Alexandre Dumas",
+    "wrongAnswers": [
+      "Victor Hugo",
+      "Honoré de Balzac",
+      "Emile Zola"
+    ]
+  },
+  {
+    "id": 74,
+    "category": "Littérature",
+    "points": 20,
+    "prompt": "Qui a écrit \"Le Maître et Marguerite\" ?",
+    "correctAnswer": "Mikhaïl Boulgakov",
+    "wrongAnswers": [
+      "Boris Pasternak",
+      "Vladimir Nabokov",
+      "Anton Tchekhov"
+    ]
+  },
+  {
+    "id": 75,
+    "category": "Nature",
+    "points": 20,
+    "prompt": "Quel mammifère marin est le plus lourd ?",
+    "correctAnswer": "Baleine bleue",
+    "wrongAnswers": [
+      "Cachalot",
+      "Orque",
+      "Morse"
+    ]
+  },
+  {
+    "id": 76,
+    "category": "Nature",
+    "points": 20,
+    "prompt": "Quelle plante est la plus grande du monde ?",
+    "correctAnswer": "Sequoia géant",
+    "wrongAnswers": [
+      "Baobab",
+      "Chêne",
+      "Sapin"
+    ]
+  },
+  {
+    "id": 77,
+    "category": "Nature",
+    "points": 20,
+    "prompt": "Quel insecte est connu pour porter 850 fois son poids ?",
+    "correctAnswer": "Scarabaée rhinocéros",
+    "wrongAnswers": [
+      "Fourmi",
+      "Sauterelle",
+      "Termite"
+    ]
+  },
+  {
+    "id": 78,
+    "category": "Gastronomie",
+    "points": 10,
+    "prompt": "Quel ingrédient donne sa couleur noire à l'encre de seiche ?",
+    "correctAnswer": "Mélanine",
+    "wrongAnswers": [
+      "Sépia",
+      "Anthocyane",
+      "Chlorophylle"
+    ]
+  },
+  {
+    "id": 79,
+    "category": "Gastronomie",
+    "points": 10,
+    "prompt": "Dans quel pays est né le sushi ?",
+    "correctAnswer": "Japon",
+    "wrongAnswers": [
+      "Chine",
+      "Corée",
+      "Vietnam"
+    ]
+  },
+  {
+    "id": 80,
+    "category": "Gastronomie",
+    "points": 10,
+    "prompt": "Quelle épice est la plus chère du monde au poids ?",
+    "correctAnswer": "Safran",
+    "wrongAnswers": [
+      "Vanille",
+      "Cardamome",
+      "Caviar"
+    ]
+  },
+  {
+    "id": 82,
+    "category": "Géographie",
+    "points": 25,
+    "prompt": "Quel pays possède le plus grand nombre de fuseaux horaires ?",
+    "correctAnswer": "France",
+    "wrongAnswers": [
+      "Russie",
+      "États-Unis",
+      "Chine"
+    ]
+  },
+  {
+    "id": 83,
+    "category": "Histoire",
+    "points": 25,
+    "prompt": "En quelle année est tombé Constantinople aux mains des Ottomans ?",
+    "correctAnswer": "1453",
+    "wrongAnswers": [
+      "1492",
+      "1517",
+      "1415"
+    ]
+  },
+  {
+    "id": 84,
+    "category": "Histoire",
+    "points": 20,
+    "prompt": "Qui était le successeur de Lénine à la tête de l’URSS ?",
+    "correctAnswer": "Joseph Staline",
+    "wrongAnswers": [
+      "Léon Trotski",
+      "Nikita Khrouchtchev",
+      "Vladimir Ilitch Lénine"
+    ]
+  },
+  {
+    "id": 85,
+    "category": "Sciences",
+    "points": 25,
+    "prompt": "Quel est le nom du physicien ayant postulé la mécanique quantique ?",
+    "correctAnswer": "Max Planck",
+    "wrongAnswers": [
+      "Niels Bohr",
+      "Werner Heisenberg",
+      "Albert Einstein"
+    ]
+  },
+  {
+    "id": 86,
+    "category": "Sciences",
+    "points": 20,
+    "prompt": "Quelle est la constante de Planck (h) en J·s ?",
+    "correctAnswer": "6,626×10⁻³⁴",
+    "wrongAnswers": [
+      "3,14×10⁻⁷",
+      "1,602×10⁻¹⁹",
+      "9,81×10⁰"
+    ]
+  },
+  {
+    "id": 87,
+    "category": "Cinéma",
+    "points": 20,
+    "prompt": "Quel film a remporté la Palme d’Or en 2019 ?",
+    "correctAnswer": "Parasite",
+    "wrongAnswers": [
+      "Joker",
+      "Once Upon a Time…",
+      "Roma"
+    ]
+  },
+  {
+    "id": 88,
+    "category": "Cinéma",
+    "points": 25,
+    "prompt": "Quel est le nom du compositeur des musiques de la saga \"Star Wars\" ?",
+    "correctAnswer": "John Williams",
+    "wrongAnswers": [
+      "Hans Zimmer",
+      "Ennio Morricone",
+      "Howard Shore"
+    ]
+  },
+  {
+    "id": 89,
+    "category": "Musique",
+    "points": 20,
+    "prompt": "Qui a composé l'opéra \"La Flûte enchantée\" ?",
+    "correctAnswer": "Mozart",
+    "wrongAnswers": [
+      "Beethoven",
+      "Wagner",
+      "Haydn"
+    ]
+  },
+  {
+    "id": 90,
+    "category": "Musique",
+    "points": 25,
+    "prompt": "Quel artiste a sorti l’album \"Blackstar\" en 2016 ?",
+    "correctAnswer": "David Bowie",
+    "wrongAnswers": [
+      "Prince",
+      "Lou Reed",
+      "Nick Cave"
+    ]
+  },
+  {
+    "id": 91,
+    "category": "Technologie",
+    "points": 25,
+    "prompt": "Quel langage a été utilisé pour coder le premier navigateur web ?",
+    "correctAnswer": "C",
+    "wrongAnswers": [
+      "Python",
+      "Java",
+      "Ruby"
+    ]
+  },
+  {
+    "id": 92,
+    "category": "Technologie",
+    "points": 20,
+    "prompt": "En quelle année a été créé le protocole TCP/IP ?",
+    "correctAnswer": "1974",
+    "wrongAnswers": [
+      "1989",
+      "1991",
+      "1968"
+    ]
+  },
+  {
+    "id": 93,
+    "category": "Sports",
+    "points": 20,
+    "prompt": "Combien de titres Michael Schumacher a-t-il remportés en F1 ?",
+    "correctAnswer": "7",
+    "wrongAnswers": [
+      "6",
+      "8",
+      "5"
+    ]
+  },
+  {
+    "id": 94,
+    "category": "Sports",
+    "points": 25,
+    "prompt": "Quel pays a remporté la Coupe du Monde de rugby en 1995 ?",
+    "correctAnswer": "Afrique du Sud",
+    "wrongAnswers": [
+      "Angleterre",
+      "Australie",
+      "Nouvelle-Zélande"
+    ]
+  },
+  {
+    "id": 95,
+    "category": "Littérature",
+    "points": 25,
+    "prompt": "Quel roman débute par “Aujourd’hui, maman est morte.” ?",
+    "correctAnswer": "L'Étranger",
+    "wrongAnswers": [
+      "La Peste",
+      "Le Mythe de Sisyphe",
+      "La Chute"
+    ]
+  },
+  {
+    "id": 97,
+    "category": "Nature",
+    "points": 20,
+    "prompt": "Quel est le champignon le plus toxique au monde ?",
+    "correctAnswer": "Amanite phalloïde",
+    "wrongAnswers": [
+      "Psilocybe cubensis",
+      "Coprin chevelu",
+      "Truffe noire"
+    ]
+  },
+  {
+    "id": 99,
+    "category": "Gastronomie",
+    "points": 20,
+    "prompt": "Quel est le plat national du Pérou ?",
+    "correctAnswer": "Ceviche",
+    "wrongAnswers": [
+      "Empanadas",
+      "Tacos",
+      "Feijoada"
+    ]
+  },
+  {
+    "id": 100,
+    "category": "Gastronomie",
+    "points": 25,
+    "prompt": "Quelle boisson est obtenue par la fermentation de riz ?",
+    "correctAnswer": "Saké",
+    "wrongAnswers": [
+      "Soju",
+      "Baijiu",
+      "Shochu"
+    ]
+  }
+]

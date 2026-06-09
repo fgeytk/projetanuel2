@@ -1,132 +1,416 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { fetchRandomQuestion, saveScore, submitAnswer } from './lib/api.js'
 
-const API = '/api'
+const ALL_CATEGORIES = ''
+const QUESTION_LIMITS = [5, 10, 15]
 
-export default function FrontOffice() {
-  const [categories, setCategories] = useState([])
-  const [selectedCat, setSelectedCat] = useState('')
-  const [question, setQuestion] = useState(null)
+function getCategoryColor(category) {
+  const colors = ['#2563eb', '#059669', '#d97706', '#7c3aed', '#dc2626', '#0891b2', '#4d7c0f']
+  const index = [...category].reduce((total, char) => total + char.charCodeAt(0), 0) % colors.length
+  return colors[index]
+}
+
+function getCategoryTotal(stats, category) {
+  if (!category) {
+    return stats.questionCount
+  }
+
+  return stats.categories.find((item) => item.name === category)?.count || 0
+}
+
+function categoryLabel(category) {
+  return category || 'Toutes categories'
+}
+
+export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) {
+  const [playerName, setPlayerName] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES)
+  const [questionCount, setQuestionCount] = useState(10)
+  const [session, setSession] = useState(null)
+  const [currentQuestion, setCurrentQuestion] = useState(null)
   const [selectedAnswer, setSelectedAnswer] = useState('')
-  const [feedback, setFeedback] = useState(null)
-  const [score, setScore] = useState(0)
-  const [total, setTotal] = useState(0)
+  const [result, setResult] = useState(null)
+  const [finished, setFinished] = useState(false)
+  const [savedScore, setSavedScore] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [savingScore, setSavingScore] = useState(false)
+  const [error, setError] = useState('')
 
-  useEffect(() => {
-    // On recupere les categories au chargement pour afficher le menu du quiz.
-    fetch(`${API}/categories`)
-      .then((r) => r.json())
-      .then(setCategories)
-  }, [])
+  const categoryCards = useMemo(() => stats.categories, [stats.categories])
+  const availableQuestions = getCategoryTotal(stats, selectedCategory)
+  const normalizedQuestionCount = Math.min(questionCount, availableQuestions || questionCount)
+  const progress = session ? Math.round((session.answered / session.questionLimit) * 100) : 0
+  const shouldFinish = Boolean(session && result && session.answered >= session.questionLimit)
 
-  const loadQuestion = (cat) => {
-    const url = cat ? `${API}/question?categorie=${encodeURIComponent(cat)}` : `${API}/question`
+  async function loadQuestion(category, excludedIds) {
+    setLoading(true)
+    setError('')
 
-    fetch(url)
-      .then((r) => r.json())
-      .then((q) => {
-        // Si l'API renvoie une erreur, on reste sur l'ecran de selection.
-        setQuestion(q.error ? null : q)
-        setSelectedAnswer('')
-        setFeedback(q.error || null)
+    try {
+      const question = await fetchRandomQuestion(category, excludedIds)
+      setCurrentQuestion(question)
+      setSelectedAnswer('')
+      setResult(null)
+      return { question, done: false }
+    } catch (err) {
+      if (err.status === 404) {
+        return { question: null, done: true }
+      }
+
+      setError(err.message || 'Impossible de charger une question')
+      return { question: null, done: false }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function startSession(event) {
+    event.preventDefault()
+
+    const cleanName = playerName.trim()
+    if (cleanName.length < 2) {
+      setError('Le pseudo doit contenir au moins 2 caracteres.')
+      return
+    }
+
+    const limit = Math.max(1, Math.min(normalizedQuestionCount, availableQuestions || normalizedQuestionCount))
+    const nextSession = {
+      playerName: cleanName,
+      category: selectedCategory,
+      questionLimit: limit,
+      answered: 0,
+      answeredIds: [],
+      correctAnswers: 0,
+      possibleScore: 0,
+      score: 0,
+    }
+
+    setSession(nextSession)
+    setFinished(false)
+    setSavedScore(null)
+
+    const { done } = await loadQuestion(selectedCategory, [])
+    if (done) {
+      setSession(null)
+      setError('Aucune question disponible pour cette selection.')
+    }
+  }
+
+  function resetToStart() {
+    setSession(null)
+    setCurrentQuestion(null)
+    setSelectedAnswer('')
+    setResult(null)
+    setFinished(false)
+    setSavedScore(null)
+    setError('')
+  }
+
+  async function finishSession(finalSession = session) {
+    if (!finalSession) {
+      return
+    }
+
+    setCurrentQuestion(null)
+    setResult(null)
+    setFinished(true)
+
+    if (savedScore || finalSession.answered === 0) {
+      return
+    }
+
+    setSavingScore(true)
+    setError('')
+
+    try {
+      const score = await saveScore({
+        playerName: finalSession.playerName,
+        category: categoryLabel(finalSession.category),
+        score: finalSession.score,
+        possibleScore: finalSession.possibleScore,
+        totalQuestions: finalSession.answered,
+        correctAnswers: finalSession.correctAnswers,
       })
+      setSavedScore(score)
+      await onScoreSaved()
+    } catch (err) {
+      setError(err.message || 'Score non enregistre')
+    } finally {
+      setSavingScore(false)
+    }
   }
 
-  const handleStart = (cat) => {
-    // Quand on change de categorie, on repart sur un score propre.
-    setSelectedCat(cat)
-    setScore(0)
-    setTotal(0)
-    loadQuestion(cat)
-  }
+  async function handleAnswer(answer) {
+    if (!currentQuestion || result || loading || !session) {
+      return
+    }
 
-  const handleAnswer = (answer) => {
     setSelectedAnswer(answer)
+    setLoading(true)
+    setError('')
 
-    fetch(`${API}/answer`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: question.id, answer }),
-    })
-      .then((r) => r.json())
-      .then((result) => {
-        setFeedback(result)
-        setTotal((t) => t + 1)
-        if (result.correct) {
-          setScore((s) => s + result.points)
-        }
-      })
+    try {
+      const answerResult = await submitAnswer(currentQuestion.id, answer)
+      const nextSession = {
+        ...session,
+        answered: session.answered + 1,
+        answeredIds: [...session.answeredIds, currentQuestion.id],
+        correctAnswers: session.correctAnswers + (answerResult.correct ? 1 : 0),
+        possibleScore: session.possibleScore + currentQuestion.points,
+        score: session.score + answerResult.points,
+      }
+
+      setResult(answerResult)
+      setSession(nextSession)
+    } catch (err) {
+      setError(err.message || 'Impossible de verifier la reponse')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const getAnswerClassName = (answer) => {
-    if (!feedback || typeof feedback !== 'object') {
-      return 'button answer-button'
+  async function goNext() {
+    if (!session || loading) {
+      return
     }
 
-    if (answer === feedback.correct_answer) {
-      return 'button answer-button answer-button--correct'
+    if (session.answered >= session.questionLimit) {
+      await finishSession(session)
+      return
     }
 
-    if (answer === selectedAnswer && !feedback.correct) {
-      return 'button answer-button answer-button--wrong'
+    const { done } = await loadQuestion(session.category, session.answeredIds)
+    if (done) {
+      await finishSession(session)
     }
-
-    return 'button answer-button'
   }
 
-  if (!question) {
+  function getAnswerClassName(answer) {
+    if (!result) {
+      return 'answer-button'
+    }
+
+    if (answer === result.correctAnswer) {
+      return 'answer-button answer-button--correct'
+    }
+
+    if (answer === selectedAnswer && !result.correct) {
+      return 'answer-button answer-button--wrong'
+    }
+
+    return 'answer-button answer-button--muted'
+  }
+
+  if (!session) {
     return (
-      <main className="quiz quiz--selection">
-        <h2>Choisir une categorie</h2>
-        {feedback && typeof feedback === 'string' && <p className="message message--error">{feedback}</p>}
-        <button onClick={() => handleStart('')} className="button list-button">
-          Toutes les categories
-        </button>
-        {categories.map((cat) => (
-          <button key={cat} onClick={() => handleStart(cat)} className="button list-button">
-            {cat}
-          </button>
-        ))}
+      <main className="play-layout">
+        <section className="start-panel">
+          <div className="section-heading">
+            <p className="eyebrow">Nouvelle partie</p>
+            <h2>Entre dans l'arene</h2>
+          </div>
+
+          <form className="start-form" onSubmit={startSession}>
+            <label className="form-field">
+              Pseudo
+              <input
+                value={playerName}
+                onChange={(event) => setPlayerName(event.target.value)}
+                placeholder="Ex : Alex"
+                maxLength={40}
+                required
+              />
+            </label>
+
+            <label className="form-field">
+              Categorie
+              <select
+                value={selectedCategory}
+                onChange={(event) => {
+                  setSelectedCategory(event.target.value)
+                  setError('')
+                }}
+              >
+                <option value={ALL_CATEGORIES}>Toutes les categories</option>
+                {categoryCards.map((category) => (
+                  <option key={category.name} value={category.name}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="choice-group" aria-label="Nombre de questions">
+              {QUESTION_LIMITS.map((limit) => (
+                <button
+                  type="button"
+                  key={limit}
+                  className={questionCount === limit ? 'choice-button choice-button--active' : 'choice-button'}
+                  onClick={() => setQuestionCount(limit)}
+                >
+                  {limit}
+                </button>
+              ))}
+            </div>
+
+            <button type="submit" className="button button--primary" disabled={loading || availableQuestions === 0}>
+              {loading ? 'Preparation...' : 'Lancer la partie'}
+            </button>
+          </form>
+
+          {error && <p className="form-error">{error}</p>}
+        </section>
+
+        <section className="category-panel">
+          <div className="section-heading">
+            <p className="eyebrow">Categories</p>
+            <h2>Choix rapide</h2>
+          </div>
+
+          <div className="category-grid">
+            <button
+              type="button"
+              className={selectedCategory === ALL_CATEGORIES ? 'category-tile category-tile--active' : 'category-tile'}
+              onClick={() => setSelectedCategory(ALL_CATEGORIES)}
+            >
+              <span className="category-swatch" style={{ backgroundColor: '#111827' }} />
+              <strong>Toutes les categories</strong>
+              <span>{stats.questionCount} questions</span>
+            </button>
+
+            {categoryCards.map((category) => (
+              <button
+                type="button"
+                className={selectedCategory === category.name ? 'category-tile category-tile--active' : 'category-tile'}
+                key={category.name}
+                onClick={() => setSelectedCategory(category.name)}
+              >
+                <span className="category-swatch" style={{ backgroundColor: getCategoryColor(category.name) }} />
+                <strong>{category.name}</strong>
+                <span>{category.count} questions</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      </main>
+    )
+  }
+
+  if (finished) {
+    const successRate = session.answered > 0 ? Math.round((session.correctAnswers / session.answered) * 100) : 0
+
+    return (
+      <main className="page-grid">
+        <section className="result-panel">
+          <div>
+            <p className="eyebrow">Partie terminee</p>
+            <h2>{session.score} points</h2>
+          </div>
+
+          <div className="result-grid">
+            <div>
+              <strong>{session.playerName}</strong>
+              <span>joueur</span>
+            </div>
+            <div>
+              <strong>{session.correctAnswers}/{session.answered}</strong>
+              <span>bonnes reponses</span>
+            </div>
+            <div>
+              <strong>{successRate}%</strong>
+              <span>reussite</span>
+            </div>
+            <div>
+              <strong>{categoryLabel(session.category)}</strong>
+              <span>categorie</span>
+            </div>
+          </div>
+
+          {savingScore && <p className="form-message">Enregistrement du score...</p>}
+          {savedScore && <p className="form-message">Score enregistre dans le classement.</p>}
+          {error && <p className="form-error">{error}</p>}
+
+          <div className="button-row">
+            <button type="button" className="button button--primary" onClick={resetToStart}>
+              Rejouer
+            </button>
+            <button type="button" className="button" onClick={onOpenLeaderboard}>
+              Voir le classement
+            </button>
+          </div>
+        </section>
       </main>
     )
   }
 
   return (
-    <main className="quiz quiz--question">
-      <div className="quiz-meta">
-        <span><strong>Categorie :</strong> {question.categorie}</span>
-        <span><strong>Score :</strong> {score} pts ({total} questions)</span>
-      </div>
-      <div className="points">{question.nb_point} points</div>
-      <h2>{question.question}</h2>
-      <div>
-        {question.answers.map((answer) => (
-          <button
-            key={answer}
-            disabled={!!feedback}
-            onClick={() => handleAnswer(answer)}
-            className={getAnswerClassName(answer)}
-          >
-            {answer}
+    <main className="page-grid">
+      <section className="quiz-panel">
+        {currentQuestion ? (
+          <>
+            <div className="quiz-status">
+              <div>
+                <p className="eyebrow">{categoryLabel(session.category)}</p>
+                <h2>{currentQuestion.prompt}</h2>
+              </div>
+              <div className="score-box">
+                <span>{session.playerName}</span>
+                <strong>{session.score}</strong>
+              </div>
+            </div>
+
+            <div className="progress-track" aria-label={`${progress}% de progression`}>
+              <span style={{ width: `${progress}%` }} />
+            </div>
+
+            <div className="question-meta">
+              <span>{currentQuestion.points} points</span>
+              <span>
+                Question {session.answered + (result ? 0 : 1)} / {session.questionLimit}
+              </span>
+            </div>
+
+            <div className="answers-grid">
+              {currentQuestion.answers.map((answer) => (
+                <button
+                  type="button"
+                  key={answer}
+                  className={getAnswerClassName(answer)}
+                  disabled={Boolean(result) || loading}
+                  onClick={() => handleAnswer(answer)}
+                >
+                  {answer}
+                </button>
+              ))}
+            </div>
+
+            {result && (
+              <div className={result.correct ? 'feedback feedback--success' : 'feedback feedback--error'}>
+                <strong>{result.correct ? 'Bonne reponse' : 'Mauvaise reponse'}</strong>
+                <span>{result.correct ? `+${result.points} points` : `Reponse attendue : ${result.correctAnswer}`}</span>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="eyebrow">Chargement</p>
+            <h2>Question en cours de chargement...</h2>
+          </>
+        )}
+
+        {error && <p className="form-error">{error}</p>}
+
+        <div className="button-row button-row--split">
+          <button type="button" className="button" onClick={resetToStart}>
+            Quitter
           </button>
-        ))}
-      </div>
-      {feedback && typeof feedback === 'object' && (
-        <div className="feedback">
-          <p className={feedback.correct ? 'message message--success' : 'message message--error'}>
-            {feedback.correct
-              ? 'Bonne reponse.'
-              : `Mauvaise reponse. La bonne reponse etait : ${feedback.correct_answer}`}
-          </p>
-          <div className="button-row">
-            <button onClick={() => loadQuestion(selectedCat)} className="button">
-              Question suivante
+          {result && (
+            <button type="button" className="button button--primary" disabled={loading} onClick={goNext}>
+              {shouldFinish ? 'Voir le resultat' : 'Question suivante'}
             </button>
-            <button onClick={() => { setQuestion(null); setFeedback(null) }} className="button">
-              Changer de categorie
-            </button>
-          </div>
+          )}
         </div>
-      )}
+      </section>
     </main>
   )
 }
