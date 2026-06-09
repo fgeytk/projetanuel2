@@ -1,14 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fetchRandomQuestion, saveScore, submitExplanation } from './lib/api.js'
+import { categoryLabel, getCategoryColor } from './lib/categories.js'
+import { useAuth } from './lib/AuthContext.jsx'
+import ShareCard from './components/ShareCard.jsx'
 
 const ALL_CATEGORIES = ''
 const QUESTION_LIMITS = [5, 10, 15]
-
-function getCategoryColor(category) {
-  const colors = ['#2563eb', '#059669', '#d97706', '#7c3aed', '#dc2626', '#0891b2', '#4d7c0f']
-  const index = [...category].reduce((total, char) => total + char.charCodeAt(0), 0) % colors.length
-  return colors[index]
-}
 
 function getCategoryTotal(stats, category) {
   if (!category) {
@@ -18,12 +15,9 @@ function getCategoryTotal(stats, category) {
   return stats.categories.find((item) => item.name === category)?.count || 0
 }
 
-function categoryLabel(category) {
-  return category || 'Toutes categories'
-}
-
-export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) {
-  const [playerName, setPlayerName] = useState('')
+export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, onBadges }) {
+  const { user } = useAuth()
+  const [playerName, setPlayerName] = useState(user?.pseudo || '')
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES)
   const [questionCount, setQuestionCount] = useState(10)
   const [session, setSession] = useState(null)
@@ -35,6 +29,12 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
   const [loading, setLoading] = useState(false)
   const [savingScore, setSavingScore] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (user?.pseudo) {
+      setPlayerName(user.pseudo)
+    }
+  }, [user])
 
   const categoryCards = useMemo(() => stats.categories, [stats.categories])
   const availableQuestions = getCategoryTotal(stats, selectedCategory)
@@ -132,6 +132,9 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
         correctAnswers: finalSession.correctAnswers,
       })
       setSavedScore(score)
+      if (score.newBadges?.length > 0) {
+        onBadges?.(score.newBadges)
+      }
       await onScoreSaved()
     } catch (err) {
       setError(err.message || 'Score non enregistre')
@@ -156,7 +159,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
     setError('')
 
     try {
-      const answerResult = await submitExplanation(currentQuestion.id, explanation)
+      const answerResult = await submitExplanation(currentQuestion.id, explanation, session.playerName)
       const nextSession = {
         ...session,
         answered: session.answered + 1,
@@ -197,23 +200,30 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
         <section className="start-panel">
           <div className="section-heading">
             <p className="eyebrow">Nouvelle partie</p>
-            <h2>Entre dans l'arene</h2>
+            <h2>Défends une réponse</h2>
           </div>
 
           <form className="start-form" onSubmit={startSession}>
-            <label className="form-field">
-              Pseudo
-              <input
-                value={playerName}
-                onChange={(event) => setPlayerName(event.target.value)}
-                placeholder="Ex : Alex"
-                maxLength={40}
-                required
-              />
-            </label>
+            {user ? (
+              <div className="form-field">
+                Joueur
+                <div className="form-message">Connecté en tant que {user.pseudo}</div>
+              </div>
+            ) : (
+              <label className="form-field">
+                Pseudo
+                <input
+                  value={playerName}
+                  onChange={(event) => setPlayerName(event.target.value)}
+                  placeholder="Ex : Alex"
+                  maxLength={40}
+                  required
+                />
+              </label>
+            )}
 
             <label className="form-field">
-              Categorie
+              Catégorie
               <select
                 value={selectedCategory}
                 onChange={(event) => {
@@ -221,7 +231,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
                   setError('')
                 }}
               >
-                <option value={ALL_CATEGORIES}>Toutes les categories</option>
+                <option value={ALL_CATEGORIES}>Toutes les catégories</option>
                 {categoryCards.map((category) => (
                   <option key={category.name} value={category.name}>
                     {category.name}
@@ -244,16 +254,16 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
             </div>
 
             <button type="submit" className="button button--primary" disabled={loading || availableQuestions === 0}>
-              {loading ? 'Preparation...' : 'Lancer la partie'}
+              {loading ? 'Préparation...' : 'Lancer la partie'}
             </button>
-          </form>
 
-          {error && <p className="form-error">{error}</p>}
+            {error && <p className="form-error">{error}</p>}
+          </form>
         </section>
 
         <section className="category-panel">
           <div className="section-heading">
-            <p className="eyebrow">Categories</p>
+            <p className="eyebrow">Catégories</p>
             <h2>Choix rapide</h2>
           </div>
 
@@ -263,8 +273,8 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
               className={selectedCategory === ALL_CATEGORIES ? 'category-tile category-tile--active' : 'category-tile'}
               onClick={() => setSelectedCategory(ALL_CATEGORIES)}
             >
-              <span className="category-swatch" style={{ backgroundColor: '#111827' }} />
-              <strong>Toutes les categories</strong>
+              <span className="category-swatch" style={{ backgroundColor: '#7c6cff', color: '#7c6cff' }} />
+              <strong>Toutes les catégories</strong>
               <span>{stats.questionCount} questions</span>
             </button>
 
@@ -275,7 +285,10 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
                 key={category.name}
                 onClick={() => setSelectedCategory(category.name)}
               >
-                <span className="category-swatch" style={{ backgroundColor: getCategoryColor(category.name) }} />
+                <span
+                  className="category-swatch"
+                  style={{ backgroundColor: getCategoryColor(category.name), color: getCategoryColor(category.name) }}
+                />
                 <strong>{category.name}</strong>
                 <span>{category.count} questions</span>
               </button>
@@ -288,12 +301,19 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
 
   if (finished) {
     const successRate = session.answered > 0 ? Math.round((session.correctAnswers / session.answered) * 100) : 0
+    const shareData = {
+      playerName: session.playerName,
+      score: session.score,
+      successRate,
+      category: categoryLabel(session.category),
+      donationPoints: session.score,
+    }
 
     return (
       <main className="page-grid">
         <section className="result-panel">
           <div>
-            <p className="eyebrow">Partie terminee</p>
+            <p className="eyebrow">Partie terminée</p>
             <h2>{session.score} points</h2>
           </div>
 
@@ -304,15 +324,15 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
             </div>
             <div>
               <strong>{session.correctAnswers}/{session.answered}</strong>
-              <span>bonnes reponses</span>
+              <span>validations auto</span>
             </div>
             <div>
               <strong>{successRate}%</strong>
-              <span>reussite</span>
+              <span>réussite</span>
             </div>
             <div>
               <strong>{categoryLabel(session.category)}</strong>
-              <span>categorie</span>
+              <span>catégorie</span>
             </div>
             <div>
               <strong>{session.score}</strong>
@@ -321,8 +341,10 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
           </div>
 
           {savingScore && <p className="form-message">Enregistrement du score...</p>}
-          {savedScore && <p className="form-message">Score enregistre dans le classement.</p>}
+          {savedScore && <p className="form-message">Score enregistré. Tes explications sont ouvertes au vote public.</p>}
           {error && <p className="form-error">{error}</p>}
+
+          <ShareCard result={shareData} />
 
           <div className="button-row">
             <button type="button" className="button button--primary" onClick={resetToStart}>
@@ -365,7 +387,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
             </div>
 
             <div className="answer-reveal">
-              <span>Reponse a defendre</span>
+              <span>Réponse à défendre</span>
               <strong>{currentQuestion.correctAnswer}</strong>
             </div>
 
@@ -375,7 +397,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
                 <textarea
                   value={explanation}
                   onChange={(event) => setExplanation(event.target.value)}
-                  placeholder="Explique pourquoi cette reponse est correcte..."
+                  placeholder="Explique pourquoi cette réponse est correcte..."
                   disabled={Boolean(result) || loading}
                   required
                 />
@@ -390,10 +412,15 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
 
             {result && (
               <div className={result.correct ? 'feedback feedback--success' : 'feedback feedback--error'}>
-                <strong>{result.correct ? 'Explication validee' : 'Explication insuffisante'}</strong>
-                <span>{result.correct ? `+${result.points} points` : result.expectedExplanation}</span>
+                <strong>{result.correct ? 'Explication validée' : 'Explication insuffisante'}</strong>
+                <span>
+                  {result.correct
+                    ? `+${result.points} points provisoires, soumis au vote public`
+                    : result.expectedExplanation}
+                </span>
+                <small>Explication publiée #{result.explanationId}. La communauté peut voter dans l'onglet Votes.</small>
                 {result.matchedKeywords?.length > 0 && (
-                  <small>Mots-cles reconnus : {result.matchedKeywords.join(', ')}</small>
+                  <small>Mots-clés reconnus : {result.matchedKeywords.join(', ')}</small>
                 )}
               </div>
             )}
@@ -413,7 +440,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard }) 
           </button>
           {result && (
             <button type="button" className="button button--primary" disabled={loading} onClick={goNext}>
-              {shouldFinish ? 'Voir le resultat' : 'Question suivante'}
+              {shouldFinish ? 'Voir le résultat' : 'Question suivante'}
             </button>
           )}
         </div>

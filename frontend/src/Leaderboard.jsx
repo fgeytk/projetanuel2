@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchLeaderboard, fetchProgress } from './lib/api.js'
+import Avatar from './components/Avatar.jsx'
 
 function formatDate(value) {
   return new Intl.DateTimeFormat('fr-FR', {
@@ -59,7 +60,10 @@ export default function Leaderboard() {
           <div className="leaderboard-list">
             {scores.map((score, index) => (
               <article className="leaderboard-row" key={score.id}>
-                <div className="rank">{index + 1}</div>
+                <div className={`rank ${index < 3 ? `rank--${index + 1}` : ''}`}>
+                  {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                </div>
+                <Avatar seed={score.playerName} size="sm" />
                 <div>
                   <strong>{score.playerName}</strong>
                   <span>{score.category}</span>
@@ -67,7 +71,7 @@ export default function Leaderboard() {
                 <div className="leaderboard-score">
                   <strong>{score.score}</strong>
                   <span>
-                    {score.correctAnswers}/{score.totalQuestions} bonnes reponses
+                    {score.correctAnswers}/{score.totalQuestions} validations auto
                   </span>
                   <span>{score.donationPoints} points solidaires</span>
                 </div>

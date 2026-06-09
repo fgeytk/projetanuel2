@@ -51,10 +51,21 @@ export async function submitAnswer(questionId, answer) {
   })
 }
 
-export async function submitExplanation(questionId, explanation) {
+export async function submitExplanation(questionId, explanation, playerName) {
   return apiFetch('/explanation', {
     method: 'POST',
-    body: JSON.stringify({ id: questionId, explanation }),
+    body: JSON.stringify({ id: questionId, explanation, playerName }),
+  })
+}
+
+export async function fetchPublicExplanations(limit = 24) {
+  return apiFetch(`/explanations?limit=${limit}`)
+}
+
+export async function voteExplanation(explanationId, voterName, approve) {
+  return apiFetch(`/explanations/${explanationId}/vote`, {
+    method: 'POST',
+    body: JSON.stringify({ voterName, approve }),
   })
 }
 
@@ -71,6 +82,36 @@ export async function saveScore(score) {
     method: 'POST',
     body: JSON.stringify(score),
   })
+}
+
+export async function registerUser({ pseudo, password, email }) {
+  return apiFetch('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ pseudo, password, email: email || null }),
+  })
+}
+
+export async function loginUser({ pseudo, password }) {
+  return apiFetch('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ pseudo, password }),
+  })
+}
+
+export async function fetchMe() {
+  return apiFetch('/auth/me')
+}
+
+export async function logoutUser() {
+  return apiFetch('/auth/logout', { method: 'POST' })
+}
+
+export async function fetchProfile() {
+  return apiFetch('/profile')
+}
+
+export async function fetchBadgeCatalogue() {
+  return apiFetch('/badges')
 }
 
 export async function loginAdmin(password) {

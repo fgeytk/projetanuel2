@@ -8,14 +8,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 try:
-    from .auth import clear_admin_session, create_admin_session, require_admin_session, verify_admin_password
+    from .auth import clear_admin_session, create_admin_session, hash_password, require_admin_session, verify_admin_password, verify_password
 except ImportError:
-    from auth import clear_admin_session, create_admin_session, require_admin_session, verify_admin_password
+    from auth import clear_admin_session, create_admin_session, hash_password, require_admin_session, verify_admin_password, verify_password
 
 try:
-    from .database import get_db, init_db, list_categories, list_questions, list_scores, reset_db, row_to_question, row_to_score, sync_categories
+    from .user_auth import clear_user_session, create_user_session, optional_user_session, public_user, require_user_session
 except ImportError:
-    from database import get_db, init_db, list_categories, list_questions, list_scores, reset_db, row_to_question, row_to_score, sync_categories
+    from user_auth import clear_user_session, create_user_session, optional_user_session, public_user, require_user_session
+
+try:
+    from .badges import BADGES, BADGES_BY_CODE, evaluate_badges
+except ImportError:
+    from badges import BADGES, BADGES_BY_CODE, evaluate_badges
+
+try:
+    from .database import get_db, get_user_aggregates, init_db, list_categories, list_questions, list_scores, list_user_attempts, list_user_badges, reset_db, row_to_question, row_to_score, sync_categories
+except ImportError:
+    from database import get_db, get_user_aggregates, init_db, list_categories, list_questions, list_scores, list_user_attempts, list_user_badges, reset_db, row_to_question, row_to_score, sync_categories
 
 
 CORS_ORIGINS = [
@@ -32,6 +42,17 @@ class AuthPayload(BaseModel):
     password: str = Field(..., min_length=1, max_length=256)
 
 
+class RegisterPayload(BaseModel):
+    pseudo: str = Field(..., min_length=3, max_length=40)
+    password: str = Field(..., min_length=6, max_length=128)
+    email: str | None = Field(None, max_length=160)
+
+
+class LoginPayload(BaseModel):
+    pseudo: str = Field(..., min_length=2, max_length=40)
+    password: str = Field(..., min_length=1, max_length=128)
+
+
 class AnswerPayload(BaseModel):
     id: int
     answer: str = Field(..., min_length=1, max_length=200)
@@ -39,6 +60,7 @@ class AnswerPayload(BaseModel):
 
 class ExplanationPayload(BaseModel):
     id: int
+    playerName: str = Field(..., min_length=2, max_length=40)
     explanation: str = Field(..., min_length=8, max_length=800)
 
 
@@ -63,6 +85,11 @@ class ScorePayload(BaseModel):
     possibleScore: int = Field(..., ge=0)
     totalQuestions: int = Field(..., ge=1, le=50)
     correctAnswers: int = Field(..., ge=0, le=50)
+
+
+class VotePayload(BaseModel):
+    voterName: str = Field(..., min_length=2, max_length=40)
+    approve: bool
 
 
 app = FastAPI(title="Quiz Arena API")
@@ -117,6 +144,68 @@ def validate_category_name(name: str) -> str:
     return clean_name
 
 
+def community_status(approve_votes: int, reject_votes: int) -> str:
+    total_votes = approve_votes + reject_votes
+    if total_votes < 3:
+        return "pending"
+    if approve_votes / total_votes >= 0.6:
+        return "accepted"
+    if reject_votes > approve_votes:
+        return "rejected"
+    return "pending"
+
+
+def row_to_public_explanation(row):
+    approve_votes = row["approve_votes"] or 0
+    reject_votes = row["reject_votes"] or 0
+    total_votes = approve_votes + reject_votes
+    status = community_status(approve_votes, reject_votes)
+
+    return {
+        "id": row["id"],
+        "playerName": row["player_name"],
+        "category": row["category"],
+        "questionPrompt": row["question_prompt"],
+        "correctAnswer": row["correct_answer"],
+        "explanation": row["explanation"],
+        "automaticCorrect": row["automatic_correct"],
+        "proposedPoints": row["proposed_points"],
+        "validatedPoints": row["proposed_points"] if status == "accepted" else 0,
+        "approveVotes": approve_votes,
+        "rejectVotes": reject_votes,
+        "totalVotes": total_votes,
+        "communityStatus": status,
+        "createdAt": row["created_at"].isoformat(),
+    }
+
+
+def award_user_badges(conn, user_id):
+    """Evaluate badges from current stats and persist newly earned ones.
+
+    Returns the list of badge definitions unlocked during this call (for toasts).
+    """
+    stats = get_user_aggregates(conn, user_id)
+    earned_codes = evaluate_badges(stats)
+    if not earned_codes:
+        return []
+
+    new_codes = []
+    for code in earned_codes:
+        inserted = conn.execute(
+            """
+            INSERT INTO user_badge (user_id, badge_code)
+            VALUES (%s, %s)
+            ON CONFLICT (user_id, badge_code) DO NOTHING
+            RETURNING badge_code
+            """,
+            (user_id, code),
+        ).fetchone()
+        if inserted:
+            new_codes.append(code)
+
+    return [BADGES_BY_CODE[code] for code in new_codes if code in BADGES_BY_CODE]
+
+
 @app.get("/")
 def root():
     return {"name": "Quiz Arena API", "status": "ok"}
@@ -150,6 +239,16 @@ def get_stats():
             FROM quiz_attempt
             """
         ).fetchone()
+        community_stats = conn.execute(
+            """
+            SELECT
+                COUNT(DISTINCT answer_explanation.id) AS explanation_count,
+                COUNT(explanation_vote.id) AS vote_count
+            FROM answer_explanation
+            LEFT JOIN explanation_vote
+                ON explanation_vote.explanation_id = answer_explanation.id
+            """
+        ).fetchone()
 
     return {
         "questionCount": stats["question_count"],
@@ -157,6 +256,8 @@ def get_stats():
         "gameCount": score_stats["game_count"],
         "bestScore": score_stats["best_score"],
         "donationPoints": score_stats["donation_points"],
+        "explanationCount": community_stats["explanation_count"],
+        "voteCount": community_stats["vote_count"],
         "categories": [{"name": row["name"], "count": row["count"]} for row in category_rows],
     }
 
@@ -235,38 +336,140 @@ def check_answer(payload: AnswerPayload):
 
 
 @app.post("/api/explanation")
-def check_explanation(payload: ExplanationPayload):
+def check_explanation(payload: ExplanationPayload, current_user: dict | None = Depends(optional_user_session)):
+    player_name = current_user["pseudo"] if current_user else payload.playerName.strip()
+
     with get_db() as conn:
         row = conn.execute(
             """
-            SELECT correct_answer, points, explanation, explanation_keywords
+            SELECT id, category, prompt, correct_answer, points, explanation, explanation_keywords
             FROM question
             WHERE id = %s
             """,
             (payload.id,),
         ).fetchone()
 
-    if not row:
-        raise HTTPException(status_code=404, detail="Question non trouvee")
+        if not row:
+            raise HTTPException(status_code=404, detail="Question non trouvee")
 
-    keywords = row["explanation_keywords"] or build_default_keywords(row["correct_answer"])
-    normalized_explanation = normalize_text(payload.explanation)
-    matched = [
-        keyword
-        for keyword in keywords
-        if normalize_text(keyword) and normalize_text(keyword) in normalized_explanation
-    ]
-    required_matches = 1 if len(keywords) <= 2 else 2
-    is_valid = len(matched) >= required_matches
+        keywords = row["explanation_keywords"] or build_default_keywords(row["correct_answer"])
+        normalized_explanation = normalize_text(payload.explanation)
+        matched = [
+            keyword
+            for keyword in keywords
+            if normalize_text(keyword) and normalize_text(keyword) in normalized_explanation
+        ]
+        required_matches = 1 if len(keywords) <= 2 else 2
+        is_valid = len(matched) >= required_matches
+
+        if current_user:
+            user = {"id": current_user["id"]}
+        else:
+            user = conn.execute(
+                """
+                INSERT INTO app_user (pseudo)
+                VALUES (%s)
+                ON CONFLICT (pseudo) DO UPDATE SET pseudo = EXCLUDED.pseudo
+                RETURNING id
+                """,
+                (player_name,),
+            ).fetchone()
+        public_explanation = conn.execute(
+            """
+            INSERT INTO answer_explanation (
+                user_id, question_id, player_name, category, question_prompt,
+                correct_answer, explanation, automatic_correct, proposed_points
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+            """,
+            (
+                user["id"],
+                row["id"],
+                player_name,
+                row["category"],
+                row["prompt"],
+                row["correct_answer"],
+                payload.explanation.strip(),
+                is_valid,
+                row["points"],
+            ),
+        ).fetchone()
 
     return {
         "correct": is_valid,
         "correctAnswer": row["correct_answer"],
         "points": row["points"] if is_valid else 0,
+        "proposedPoints": row["points"],
         "expectedExplanation": row["explanation"],
+        "explanationId": public_explanation["id"],
         "matchedKeywords": matched,
         "requiredMatches": required_matches,
+        "communityStatus": "pending",
     }
+
+
+@app.get("/api/explanations")
+def get_public_explanations(limit: int = 24):
+    if limit < 1 or limit > 100:
+        raise HTTPException(status_code=422, detail="La limite doit etre entre 1 et 100")
+
+    with get_db() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                answer_explanation.*,
+                COUNT(explanation_vote.id) FILTER (WHERE explanation_vote.approve = TRUE) AS approve_votes,
+                COUNT(explanation_vote.id) FILTER (WHERE explanation_vote.approve = FALSE) AS reject_votes
+            FROM answer_explanation
+            LEFT JOIN explanation_vote
+                ON explanation_vote.explanation_id = answer_explanation.id
+            GROUP BY answer_explanation.id
+            ORDER BY answer_explanation.created_at DESC
+            LIMIT %s
+            """,
+            (limit,),
+        ).fetchall()
+
+    return [row_to_public_explanation(row) for row in rows]
+
+
+@app.post("/api/explanations/{explanation_id}/vote")
+def vote_public_explanation(explanation_id: int, payload: VotePayload):
+    voter_name = payload.voterName.strip()
+
+    with get_db() as conn:
+        explanation = conn.execute(
+            "SELECT id FROM answer_explanation WHERE id = %s",
+            (explanation_id,),
+        ).fetchone()
+        if not explanation:
+            raise HTTPException(status_code=404, detail="Explication non trouvee")
+
+        conn.execute(
+            """
+            INSERT INTO explanation_vote (explanation_id, voter_name, approve)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (explanation_id, voter_name)
+            DO UPDATE SET approve = EXCLUDED.approve, created_at = NOW()
+            """,
+            (explanation_id, voter_name, payload.approve),
+        )
+        row = conn.execute(
+            """
+            SELECT
+                answer_explanation.*,
+                COUNT(explanation_vote.id) FILTER (WHERE explanation_vote.approve = TRUE) AS approve_votes,
+                COUNT(explanation_vote.id) FILTER (WHERE explanation_vote.approve = FALSE) AS reject_votes
+            FROM answer_explanation
+            LEFT JOIN explanation_vote
+                ON explanation_vote.explanation_id = answer_explanation.id
+            WHERE answer_explanation.id = %s
+            GROUP BY answer_explanation.id
+            """,
+            (explanation_id,),
+        ).fetchone()
+
+    return row_to_public_explanation(row)
 
 
 @app.get("/api/leaderboard")
@@ -308,8 +511,8 @@ def get_progress_by_category():
 
 
 @app.post("/api/scores", status_code=201)
-def create_score(payload: ScorePayload):
-    player_name = payload.playerName.strip()
+def create_score(payload: ScorePayload, current_user: dict | None = Depends(optional_user_session)):
+    player_name = current_user["pseudo"] if current_user else payload.playerName.strip()
     category = payload.category.strip()
 
     if payload.correctAnswers > payload.totalQuestions:
@@ -320,15 +523,18 @@ def create_score(payload: ScorePayload):
     donation_points = payload.score
 
     with get_db() as conn:
-        user = conn.execute(
-            """
-            INSERT INTO app_user (pseudo)
-            VALUES (%s)
-            ON CONFLICT (pseudo) DO UPDATE SET pseudo = EXCLUDED.pseudo
-            RETURNING id
-            """,
-            (player_name,),
-        ).fetchone()
+        if current_user:
+            user = {"id": current_user["id"]}
+        else:
+            user = conn.execute(
+                """
+                INSERT INTO app_user (pseudo)
+                VALUES (%s)
+                ON CONFLICT (pseudo) DO UPDATE SET pseudo = EXCLUDED.pseudo
+                RETURNING id
+                """,
+                (player_name,),
+            ).fetchone()
         row = conn.execute(
             """
             INSERT INTO quiz_attempt (
@@ -349,8 +555,134 @@ def create_score(payload: ScorePayload):
         ).fetchone()
 
         row["player_name"] = player_name
+        new_badges = award_user_badges(conn, user["id"]) if current_user else []
 
-    return row_to_score(row)
+    result = row_to_score(row)
+    result["newBadges"] = new_badges
+    return result
+
+
+@app.get("/api/badges")
+def list_badge_catalogue():
+    return BADGES
+
+
+@app.post("/api/auth/register", status_code=201)
+def register_user(payload: RegisterPayload, response: Response):
+    pseudo = payload.pseudo.strip()
+    email = payload.email.strip() if payload.email else None
+    if not pseudo:
+        raise HTTPException(status_code=422, detail="Pseudo requis")
+
+    password_hash = hash_password(payload.password)
+
+    with get_db() as conn:
+        existing = conn.execute(
+            "SELECT id, password_hash FROM app_user WHERE LOWER(pseudo) = LOWER(%s)",
+            (pseudo,),
+        ).fetchone()
+
+        if existing and existing["password_hash"]:
+            raise HTTPException(status_code=409, detail="Ce pseudo est déjà pris")
+
+        if existing:
+            # Claim a pseudo previously used in guest mode (no password yet).
+            row = conn.execute(
+                """
+                UPDATE app_user
+                SET password_hash = %s, email = COALESCE(%s, email),
+                    avatar_seed = COALESCE(avatar_seed, %s)
+                WHERE id = %s
+                RETURNING *
+                """,
+                (password_hash, email, pseudo, existing["id"]),
+            ).fetchone()
+        else:
+            row = conn.execute(
+                """
+                INSERT INTO app_user (pseudo, email, password_hash, avatar_seed)
+                VALUES (%s, %s, %s, %s)
+                RETURNING *
+                """,
+                (pseudo, email, password_hash, pseudo),
+            ).fetchone()
+
+    create_user_session(response, row["id"])
+    return public_user(row)
+
+
+@app.post("/api/auth/login")
+def login_user(payload: LoginPayload, response: Response):
+    pseudo = payload.pseudo.strip()
+
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM app_user WHERE LOWER(pseudo) = LOWER(%s)",
+            (pseudo,),
+        ).fetchone()
+
+    if not row or not row["password_hash"] or not verify_password(payload.password, row["password_hash"]):
+        raise HTTPException(status_code=401, detail="Pseudo ou mot de passe incorrect")
+
+    create_user_session(response, row["id"])
+    return public_user(row)
+
+
+@app.get("/api/auth/me")
+def get_me(current_user: dict | None = Depends(optional_user_session)):
+    if not current_user:
+        return {"user": None}
+    return {"user": current_user}
+
+
+@app.post("/api/auth/logout")
+def logout_user(response: Response, _: None = Depends(clear_user_session)):
+    return {"user": None}
+
+
+@app.get("/api/profile")
+def get_profile(current_user: dict = Depends(require_user_session)):
+    with get_db() as conn:
+        # Re-evaluate badges so community-dependent ones (e.g. accepted explanations) appear.
+        award_user_badges(conn, current_user["id"])
+        stats = get_user_aggregates(conn, current_user["id"])
+        attempts = list_user_attempts(conn, current_user["id"])
+        earned = list_user_badges(conn, current_user["id"])
+        progress_rows = conn.execute(
+            """
+            SELECT category,
+                   COUNT(*) AS games,
+                   COALESCE(MAX(score), 0) AS best_score,
+                   COALESCE(SUM(donation_points), 0) AS donation_points
+            FROM quiz_attempt
+            WHERE user_id = %s
+            GROUP BY category
+            ORDER BY best_score DESC, category ASC
+            """,
+            (current_user["id"],),
+        ).fetchall()
+
+    earned_codes = {item["code"] for item in earned}
+    badges = [
+        {**badge, "unlocked": badge["code"] in earned_codes}
+        for badge in BADGES
+    ]
+
+    return {
+        "user": current_user,
+        "stats": stats,
+        "attempts": attempts,
+        "badges": badges,
+        "progress": [
+            {
+                "category": row["category"],
+                "games": row["games"],
+                "bestScore": row["best_score"],
+                "donationPoints": row["donation_points"],
+            }
+            for row in progress_rows
+        ],
+    }
 
 
 @app.post("/api/admin/auth")

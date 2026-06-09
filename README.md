@@ -1,8 +1,10 @@
 # Quiz Arena - Front, Back et Base de donnees
 
-Quiz Arena est une application web de quiz avec apprentissage inverse. Le joueur entre un pseudo, choisit une categorie, voit une reponse a defendre, explique pourquoi elle est correcte, puis retrouve son score dans un classement.
+Quiz Arena est une application web de quiz argumente, avec une interface "Arcade Neon" (theme sombre, accents neon). Le joueur entre un pseudo (ou se connecte a son compte), choisit une categorie, voit une reponse a defendre, explique pourquoi elle est correcte, puis la communaute vote pour dire si cette explication merite les points.
 
-Le projet contient aussi un back-office securise pour gerer les questions, les categories, les explications attendues et les mots-cles de validation.
+Les joueurs peuvent creer un compte pour debloquer une page profil, des badges (achievements), un historique de parties et un pseudo reserve. A la fin d'une partie, une carte de score partageable est generee (partage natif, copie ou image PNG). Le mode invite reste disponible sans compte.
+
+Le projet contient aussi un back-office securise pour gerer les questions, les categories, les explications attendues et les mots-cles de validation automatique.
 
 ## Ce que montre le projet
 
@@ -10,7 +12,7 @@ Ce projet montre une application complete avec :
 
 - un site visible dans le navigateur ;
 - un serveur Python qui gere les demandes du site ;
-- une base de donnees PostgreSQL qui garde les utilisateurs, categories, questions, tentatives et sessions admin ;
+- une base de donnees PostgreSQL qui garde les utilisateurs, categories, questions, tentatives, explications, votes et sessions admin ;
 - un outil d'administration pour consulter la base ;
 - Docker Compose pour tout lancer avec une seule commande.
 
@@ -19,19 +21,26 @@ Ce projet montre une application complete avec :
 | Partie | Technologie | Role |
 | --- | --- | --- |
 | Frontend | React + Vite | Affiche le site, le quiz, le classement et le back-office |
-| Backend | Python + FastAPI | Verifie les explications, enregistre les scores et gere l'administration |
-| Base de donnees | PostgreSQL | Stocke les utilisateurs, categories, questions, tentatives et sessions |
+| Backend | Python + FastAPI | Verifie les explications, enregistre les scores, expose les votes et gere l'administration |
+| Base de donnees | PostgreSQL | Stocke les utilisateurs, categories, questions, tentatives, votes et sessions |
 | Admin BDD | Adminer | Permet de consulter les tables de la base dans le navigateur |
 | Lancement | Docker Compose | Lance tous les services ensemble |
 
 ## Fonctionnalites principales
 
+- Comptes joueurs : inscription, connexion, session par cookie `HttpOnly`.
+- Page profil : avatar genere, statistiques, historique de parties, progression.
+- Badges (achievements) debloques automatiquement en jouant.
+- Carte de score partageable (partage natif, copie presse-papier ou image PNG).
+- Mode invite : jouer sans compte avec un simple pseudo.
 - Creation d'une partie avec un pseudo joueur.
 - Choix d'une categorie ou de toutes les categories.
 - Choix du nombre de questions : 5, 10 ou 15.
 - Questions aleatoires sans repetition dans une partie.
 - Affichage de la bonne reponse, puis saisie d'une explication par le joueur.
-- Validation de l'explication par mots-cles cote backend.
+- Validation automatique de l'explication par mots-cles cote backend.
+- Publication des explications dans un espace de vote public.
+- Vote communautaire pour confirmer ou refuser les points d'une explication.
 - Score calcule automatiquement.
 - Enregistrement de chaque tentative en base de donnees.
 - Page classement des meilleurs joueurs.
@@ -56,6 +65,7 @@ Ce projet montre une application complete avec :
 | Explication par question | Fait avec `explanation` et `explanation_keywords` |
 | Quiz solo responsive | Fait dans l'onglet Jouer |
 | Apprentissage inverse | Fait : la reponse est affichee, le joueur doit l'expliquer |
+| Vote communautaire | Fait avec l'onglet Votes |
 | Progression par categorie | Fait dans l'onglet Classement |
 | Points solidaires fictifs | Fait avec `donation_points` |
 | Deploiement Docker sur VM | Guide fourni dans `DEPLOY_GCP_VM.md` |
@@ -73,7 +83,7 @@ Avant de lancer le projet, il faut :
 Dossier du projet :
 
 ```text
-C:\Users\titou\Documents\projetanuel2
+Ouvrir PowerShell dans le dossier du repo Quiz Arena
 ```
 
 ## Lancer le projet
@@ -109,7 +119,7 @@ Quand le lancement est termine, ouvrir :
 
 | Page | Adresse | Utilite |
 | --- | --- | --- |
-| Site | http://localhost:3000 | Jouer, voir le classement, gerer les questions |
+| Site | http://localhost:3000 | Jouer, voter, voir le classement, gerer les questions |
 | API | http://localhost:8000 | Backend Python |
 | Documentation API | http://localhost:8000/docs | Tester les routes du backend |
 | Adminer | http://localhost:8080 | Voir la base PostgreSQL |
@@ -119,18 +129,21 @@ Quand le lancement est termine, ouvrir :
 Pour presenter le projet simplement :
 
 1. Ouvrir http://localhost:3000.
-2. Entrer un pseudo.
-3. Choisir une categorie.
+2. Cliquer sur `Se connecter` et creer un compte (pseudo + mot de passe).
+3. Choisir une categorie depuis l'onglet `Jouer`.
 4. Lancer une partie de 5 questions.
 5. Lire la reponse affichee et saisir une explication.
 6. Montrer la validation de l'explication par le backend.
-7. Montrer l'ecran de resultat.
-8. Ouvrir l'onglet `Classement`.
-9. Montrer que le score et les points solidaires sont enregistres.
-10. Montrer la progression par categorie.
-11. Ouvrir l'onglet `Admin`.
-12. Ajouter ou modifier une question avec son explication.
-13. Ouvrir Adminer pour montrer les tables PostgreSQL.
+7. Montrer l'ecran de resultat, la carte de score partageable et le badge debloque.
+8. Ouvrir l'onglet `Profil` pour montrer stats, badges et historique.
+9. Ouvrir l'onglet `Votes`.
+10. Voter pour accepter ou refuser les points d'une explication.
+11. Ouvrir l'onglet `Classement`.
+12. Montrer que le score et les points solidaires sont enregistres.
+13. Montrer la progression par categorie.
+14. Ouvrir l'onglet `Admin`.
+15. Ajouter ou modifier une question avec son explication.
+16. Ouvrir Adminer pour montrer les tables PostgreSQL.
 
 ## Back-office
 
@@ -205,10 +218,14 @@ Elle contient principalement ces tables :
 
 | Table | Role |
 | --- | --- |
-| `app_user` | Stocke les joueurs, leur role et le statut de validation email |
+| `app_user` | Stocke les joueurs, leur role, mot de passe (hash) et avatar |
 | `category` | Stocke les categories gerees dans le back-office |
 | `question` | Stocke les questions, les reponses, les explications et les mots-cles |
 | `quiz_attempt` | Stocke les parties terminees, scores et points solidaires |
+| `answer_explanation` | Stocke les explications publiees par les joueurs |
+| `explanation_vote` | Stocke les votes publics sur les explications |
+| `user_session` | Stocke les sessions joueur actives sous forme de hash |
+| `user_badge` | Stocke les badges debloques par chaque joueur |
 | `admin_session` | Stocke les sessions admin actives sous forme de hash |
 
 La table `score` peut exister dans certaines bases locales anciennes, mais le MVP actuel utilise `quiz_attempt` pour les nouvelles parties.
@@ -245,6 +262,12 @@ Nombre de tentatives :
 docker compose exec db psql -U quiz -d quiz -c "SELECT COUNT(*) FROM quiz_attempt;"
 ```
 
+Nombre de votes :
+
+```powershell
+docker compose exec db psql -U quiz -d quiz -c "SELECT COUNT(*) FROM explanation_vote;"
+```
+
 ## Architecture simplifiee
 
 ```text
@@ -276,6 +299,8 @@ Explication :
 ```text
 backend/
   auth.py                  Securite admin, hash mot de passe, sessions
+  user_auth.py             Sessions joueur (cookie HttpOnly)
+  badges.py                Catalogue et evaluation des badges
   main.py                  Routes API FastAPI
   database.py              Connexion PostgreSQL et creation des tables
   data/questions.seed.json Questions initiales
@@ -283,11 +308,16 @@ backend/
   Dockerfile               Image Docker du backend
 
 frontend/
-  src/App.jsx              Structure principale
+  src/App.jsx              Structure principale (shell, nav, hero, toasts)
   src/FrontOffice.jsx      Parcours joueur
+  src/Profile.jsx          Page profil (stats, badges, historique)
+  src/CommunityVote.jsx    Votes publics sur les explications
   src/Leaderboard.jsx      Classement
   src/BackOffice.jsx       Administration des questions
+  src/components/          Avatar, AuthModal, Hero, BadgeGrid, ShareCard, Toast
+  src/styles/              Design tokens et base (theme Arcade Neon)
   src/lib/api.js           Appels vers le backend
+  src/lib/AuthContext.jsx  Etat d'authentification joueur
   Dockerfile               Image Docker du frontend
 
 docker-compose.yml         Lance le frontend, le backend, PostgreSQL et Adminer
@@ -301,9 +331,19 @@ README.md                  Documentation du projet
 | Methode | Route | Utilite |
 | --- | --- | --- |
 | GET | `/api/stats` | Statistiques generales |
+| GET | `/api/badges` | Catalogue des badges |
+| POST | `/api/auth/register` | Inscription joueur |
+| POST | `/api/auth/login` | Connexion joueur |
+| GET | `/api/auth/me` | Joueur connecte (ou aucun) |
+| POST | `/api/auth/logout` | Deconnexion joueur |
+| GET | `/api/profile` | Profil, stats, badges, historique |
 | GET | `/api/question` | Question aleatoire |
 | POST | `/api/answer` | Verification d'une reponse |
+| POST | `/api/explanation` | Verification automatique et publication d'une explication |
+| GET | `/api/explanations` | Liste des explications ouvertes au vote |
+| POST | `/api/explanations/{id}/vote` | Vote public sur une explication |
 | GET | `/api/leaderboard` | Classement des scores |
+| GET | `/api/progress` | Progression par categorie |
 | POST | `/api/scores` | Enregistrement d'un score |
 | POST | `/api/admin/auth` | Connexion admin |
 | GET | `/api/admin/session` | Verification de la session admin |
