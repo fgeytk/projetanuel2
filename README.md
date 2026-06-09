@@ -1,8 +1,8 @@
 # Quiz Arena - Front, Back et Base de donnees
 
-Quiz Arena est une application web de quiz. Un joueur entre un pseudo, choisit une categorie, lance une partie, repond aux questions puis retrouve son score dans un classement.
+Quiz Arena est une application web de quiz avec apprentissage inverse. Le joueur entre un pseudo, choisit une categorie, voit une reponse a defendre, explique pourquoi elle est correcte, puis retrouve son score dans un classement.
 
-Le projet contient aussi un back-office pour gerer les questions du quiz.
+Le projet contient aussi un back-office securise pour gerer les questions, les categories, les explications attendues et les mots-cles de validation.
 
 ## Ce que montre le projet
 
@@ -10,7 +10,7 @@ Ce projet montre une application complete avec :
 
 - un site visible dans le navigateur ;
 - un serveur Python qui gere les demandes du site ;
-- une base de donnees PostgreSQL qui garde les questions et les scores ;
+- une base de donnees PostgreSQL qui garde les utilisateurs, categories, questions, tentatives et sessions admin ;
 - un outil d'administration pour consulter la base ;
 - Docker Compose pour tout lancer avec une seule commande.
 
@@ -19,24 +19,48 @@ Ce projet montre une application complete avec :
 | Partie | Technologie | Role |
 | --- | --- | --- |
 | Frontend | React + Vite | Affiche le site, le quiz, le classement et le back-office |
-| Backend | Python + FastAPI | Verifie les reponses, enregistre les scores et gere les questions |
-| Base de donnees | PostgreSQL | Stocke les questions et les scores |
+| Backend | Python + FastAPI | Verifie les explications, enregistre les scores et gere l'administration |
+| Base de donnees | PostgreSQL | Stocke les utilisateurs, categories, questions, tentatives et sessions |
 | Admin BDD | Adminer | Permet de consulter les tables de la base dans le navigateur |
 | Lancement | Docker Compose | Lance tous les services ensemble |
 
 ## Fonctionnalites principales
 
-- Creation d'une partie avec un pseudo.
+- Creation d'une partie avec un pseudo joueur.
 - Choix d'une categorie ou de toutes les categories.
 - Choix du nombre de questions : 5, 10 ou 15.
 - Questions aleatoires sans repetition dans une partie.
-- Verification des reponses par le backend.
+- Affichage de la bonne reponse, puis saisie d'une explication par le joueur.
+- Validation de l'explication par mots-cles cote backend.
 - Score calcule automatiquement.
-- Enregistrement du score en base de donnees.
+- Enregistrement de chaque tentative en base de donnees.
 - Page classement des meilleurs joueurs.
-- Back-office admin pour ajouter, modifier ou supprimer des questions.
+- Graphique de progression par categorie.
+- Points solidaires fictifs, convertibles en impact UNICEF dans la presentation.
+- Back-office admin pour ajouter, modifier ou supprimer des questions et categories.
+- Champ d'explication attendue pour chaque question.
+- Mots-cles de validation configurables par question.
 - Import et export JSON des questions.
 - Reset des questions initiales.
+
+## Couverture des attendus du projet
+
+| Attendu | Etat dans ce repo |
+| --- | --- |
+| Docker Front, Back, Base de donnees | Fait avec `docker-compose.yml` |
+| Modelisation Users, Questions, Categories, Tentatives | Fait avec PostgreSQL |
+| Backend Python | Fait avec FastAPI |
+| Authentification admin | Fait avec session serveur et cookie `HttpOnly` |
+| Roles User/Admin | Fait cote base avec `app_user.role` et session admin |
+| CRUD questions/categories | Fait dans l'onglet Admin |
+| Explication par question | Fait avec `explanation` et `explanation_keywords` |
+| Quiz solo responsive | Fait dans l'onglet Jouer |
+| Apprentissage inverse | Fait : la reponse est affichee, le joueur doit l'expliquer |
+| Progression par categorie | Fait dans l'onglet Classement |
+| Points solidaires fictifs | Fait avec `donation_points` |
+| Deploiement Docker sur VM | Guide fourni dans `DEPLOY_GCP_VM.md` |
+| Validation mail admin | Preparee en base avec `email_verified`, SMTP non branche dans ce prototype |
+| Duel temps reel WebSocket | Non implemente dans ce MVP |
 
 ## Pre-requis
 
@@ -98,13 +122,15 @@ Pour presenter le projet simplement :
 2. Entrer un pseudo.
 3. Choisir une categorie.
 4. Lancer une partie de 5 questions.
-5. Repondre aux questions.
-6. Montrer l'ecran de resultat.
-7. Ouvrir l'onglet `Classement`.
-8. Montrer que le score est enregistre.
-9. Ouvrir l'onglet `Admin`.
-10. Ajouter ou modifier une question.
-11. Ouvrir Adminer pour montrer les tables PostgreSQL.
+5. Lire la reponse affichee et saisir une explication.
+6. Montrer la validation de l'explication par le backend.
+7. Montrer l'ecran de resultat.
+8. Ouvrir l'onglet `Classement`.
+9. Montrer que le score et les points solidaires sont enregistres.
+10. Montrer la progression par categorie.
+11. Ouvrir l'onglet `Admin`.
+12. Ajouter ou modifier une question avec son explication.
+13. Ouvrir Adminer pour montrer les tables PostgreSQL.
 
 ## Back-office
 
@@ -142,6 +168,9 @@ Dans le back-office, on peut :
 - ajouter une question ;
 - modifier une question ;
 - supprimer une question ;
+- creer, renommer et supprimer une categorie ;
+- definir l'explication attendue d'une question ;
+- definir les mots-cles utilises pour valider l'explication joueur ;
 - rechercher dans les questions ;
 - filtrer par categorie ;
 - exporter les questions en JSON ;
@@ -172,13 +201,17 @@ docker compose up -d --build
 
 La base utilisee est PostgreSQL.
 
-Elle contient principalement deux tables :
+Elle contient principalement ces tables :
 
 | Table | Role |
 | --- | --- |
-| `question` | Stocke les questions, les categories, les points et les reponses |
-| `score` | Stocke les parties terminees et les scores des joueurs |
+| `app_user` | Stocke les joueurs, leur role et le statut de validation email |
+| `category` | Stocke les categories gerees dans le back-office |
+| `question` | Stocke les questions, les reponses, les explications et les mots-cles |
+| `quiz_attempt` | Stocke les parties terminees, scores et points solidaires |
 | `admin_session` | Stocke les sessions admin actives sous forme de hash |
+
+La table `score` peut exister dans certaines bases locales anciennes, mais le MVP actuel utilise `quiz_attempt` pour les nouvelles parties.
 
 ## Connexion a Adminer
 
@@ -206,10 +239,10 @@ Nombre de questions :
 docker compose exec db psql -U quiz -d quiz -c "SELECT COUNT(*) FROM question;"
 ```
 
-Nombre de scores :
+Nombre de tentatives :
 
 ```powershell
-docker compose exec db psql -U quiz -d quiz -c "SELECT COUNT(*) FROM score;"
+docker compose exec db psql -U quiz -d quiz -c "SELECT COUNT(*) FROM quiz_attempt;"
 ```
 
 ## Architecture simplifiee
@@ -242,6 +275,7 @@ Explication :
 
 ```text
 backend/
+  auth.py                  Securite admin, hash mot de passe, sessions
   main.py                  Routes API FastAPI
   database.py              Connexion PostgreSQL et creation des tables
   data/questions.seed.json Questions initiales
@@ -257,6 +291,8 @@ frontend/
   Dockerfile               Image Docker du frontend
 
 docker-compose.yml         Lance le frontend, le backend, PostgreSQL et Adminer
+docker-compose.prod.yml    Lance la version production pour une VM
+DEPLOY_GCP_VM.md           Guide de deploiement sur Google Cloud VM
 README.md                  Documentation du projet
 ```
 

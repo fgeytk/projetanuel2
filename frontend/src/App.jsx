@@ -8,6 +8,7 @@ import './App.css'
 const emptyStats = {
   categories: [],
   bestScore: 0,
+  donationPoints: 0,
   gameCount: 0,
   maxScore: 0,
   questionCount: 0,
@@ -86,6 +87,10 @@ export default function App() {
         <div>
           <strong>{stats.bestScore}</strong>
           <span>record</span>
+        </div>
+        <div>
+          <strong>{stats.donationPoints}</strong>
+          <span>points solidaires</span>
         </div>
       </section>
 

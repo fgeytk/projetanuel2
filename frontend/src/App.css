@@ -142,7 +142,7 @@ h3 {
 
 .summary-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 1px;
   margin: 28px 0 22px;
   overflow: hidden;
@@ -337,6 +337,32 @@ h3 {
   gap: 10px;
 }
 
+.answer-reveal {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid #b7cdfb;
+  border-radius: 8px;
+  background: #eef4ff;
+}
+
+.answer-reveal span {
+  color: #1957d2;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.answer-reveal strong {
+  color: #172033;
+  font-size: 1.35rem;
+}
+
+.explanation-form {
+  display: grid;
+  gap: 12px;
+}
+
 .answer-button {
   width: 100%;
   min-height: 54px;
@@ -377,6 +403,11 @@ h3 {
   padding: 14px;
   border-radius: 8px;
   font-weight: 800;
+}
+
+.feedback small {
+  font-weight: 700;
+  opacity: 0.82;
 }
 
 .feedback--success {
@@ -421,7 +452,7 @@ h3 {
 
 .result-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 1px;
   overflow: hidden;
   border: 1px solid #d8dee8;
@@ -514,6 +545,47 @@ h3 {
   text-align: center;
 }
 
+.progress-list {
+  display: grid;
+  gap: 10px;
+}
+
+.progress-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(160px, 2fr) minmax(80px, auto) minmax(130px, auto);
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e6eaf0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.progress-row div {
+  display: grid;
+  gap: 3px;
+}
+
+.progress-row span {
+  color: #667085;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.progress-bar {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e6eaf0;
+}
+
+.progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #1957d2;
+}
+
 .admin-login {
   width: min(460px, 100%);
   padding: 28px;
@@ -543,6 +615,31 @@ h3 {
 .question-form,
 .question-list {
   padding: 18px;
+}
+
+.question-list {
+  grid-column: 1 / -1;
+}
+
+.category-admin-form {
+  display: grid;
+  gap: 10px;
+}
+
+.category-admin-list {
+  display: grid;
+  gap: 8px;
+}
+
+.category-admin-list > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid #e6eaf0;
+  border-radius: 8px;
+  background: #ffffff;
 }
 
 .form-field {
@@ -660,7 +757,8 @@ td:nth-child(4) {
   }
 
   .panel-heading,
-  .leaderboard-row {
+  .leaderboard-row,
+  .progress-row {
     align-items: stretch;
     grid-template-columns: 1fr;
   }

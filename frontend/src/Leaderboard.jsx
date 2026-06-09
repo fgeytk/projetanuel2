@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchLeaderboard } from './lib/api.js'
+import { fetchLeaderboard, fetchProgress } from './lib/api.js'
 
 function formatDate(value) {
   return new Intl.DateTimeFormat('fr-FR', {
@@ -12,6 +12,7 @@ function formatDate(value) {
 
 export default function Leaderboard() {
   const [scores, setScores] = useState([])
+  const [progress, setProgress] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -21,7 +22,9 @@ export default function Leaderboard() {
 
     try {
       const data = await fetchLeaderboard(20)
+      const progressData = await fetchProgress()
       setScores(data)
+      setProgress(progressData)
     } catch (err) {
       setError(err.message || 'Classement indisponible')
     } finally {
@@ -66,10 +69,49 @@ export default function Leaderboard() {
                   <span>
                     {score.correctAnswers}/{score.totalQuestions} bonnes reponses
                   </span>
+                  <span>{score.donationPoints} points solidaires</span>
                 </div>
                 <time>{formatDate(score.createdAt)}</time>
               </article>
             ))}
+          </div>
+        )}
+      </section>
+
+      <section className="leaderboard-panel">
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">Progression</p>
+            <h2>Scores par categorie</h2>
+          </div>
+        </div>
+
+        {progress.length === 0 ? (
+          <p className="empty-state">Les graphiques apparaitront apres les premieres parties.</p>
+        ) : (
+          <div className="progress-list">
+            {progress.map((item) => {
+              const width = Math.max(6, Math.min(100, item.bestScore))
+              return (
+                <div className="progress-row" key={item.category}>
+                  <div>
+                    <strong>{item.category}</strong>
+                    <span>{item.games} partie{item.games > 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="progress-bar">
+                    <span style={{ width: `${width}%` }} />
+                  </div>
+                  <div>
+                    <strong>{item.bestScore}</strong>
+                    <span>record</span>
+                  </div>
+                  <div>
+                    <strong>{item.donationPoints}</strong>
+                    <span>points solidaires</span>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </section>

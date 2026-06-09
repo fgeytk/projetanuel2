@@ -1,5 +1,7 @@
 import os
 import random
+import re
+import unicodedata
 
 from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,9 +13,9 @@ except ImportError:
     from auth import clear_admin_session, create_admin_session, require_admin_session, verify_admin_password
 
 try:
-    from .database import get_db, init_db, list_questions, list_scores, reset_db, row_to_question, row_to_score
+    from .database import get_db, init_db, list_categories, list_questions, list_scores, reset_db, row_to_question, row_to_score, sync_categories
 except ImportError:
-    from database import get_db, init_db, list_questions, list_scores, reset_db, row_to_question, row_to_score
+    from database import get_db, init_db, list_categories, list_questions, list_scores, reset_db, row_to_question, row_to_score, sync_categories
 
 
 CORS_ORIGINS = [
@@ -35,12 +37,23 @@ class AnswerPayload(BaseModel):
     answer: str = Field(..., min_length=1, max_length=200)
 
 
+class ExplanationPayload(BaseModel):
+    id: int
+    explanation: str = Field(..., min_length=8, max_length=800)
+
+
 class QuestionPayload(BaseModel):
     category: str = Field(..., min_length=1, max_length=100)
     points: int = Field(..., ge=1, le=100)
     prompt: str = Field(..., min_length=1, max_length=500)
     correctAnswer: str = Field(..., min_length=1, max_length=200)
     wrongAnswers: list[str] = Field(..., min_length=3, max_length=3)
+    explanation: str = Field("", max_length=800)
+    explanationKeywords: list[str] = Field(default_factory=list, max_length=8)
+
+
+class CategoryPayload(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
 
 
 class ScorePayload(BaseModel):
@@ -70,13 +83,38 @@ def validate_question_payload(payload: QuestionPayload) -> QuestionPayload:
     if len(cleaned_wrong_answers) != 3 or any(not answer for answer in cleaned_wrong_answers):
         raise HTTPException(status_code=422, detail="Trois mauvaises reponses sont requises")
 
+    explanation = payload.explanation.strip() or f"La bonne reponse est {payload.correctAnswer.strip()}."
+    keywords = [keyword.strip().lower() for keyword in payload.explanationKeywords if keyword.strip()]
+    if not keywords:
+        keywords = build_default_keywords(payload.correctAnswer)
+
     return QuestionPayload(
         category=payload.category.strip(),
         points=payload.points,
         prompt=payload.prompt.strip(),
         correctAnswer=payload.correctAnswer.strip(),
         wrongAnswers=cleaned_wrong_answers,
+        explanation=explanation,
+        explanationKeywords=keywords[:8],
     )
+
+
+def normalize_text(value: str) -> str:
+    normalized = unicodedata.normalize("NFD", value.lower())
+    without_accents = "".join(char for char in normalized if unicodedata.category(char) != "Mn")
+    return re.sub(r"[^a-z0-9]+", " ", without_accents).strip()
+
+
+def build_default_keywords(value: str) -> list[str]:
+    words = [word for word in normalize_text(value).split() if len(word) >= 3]
+    return words or [normalize_text(value)]
+
+
+def validate_category_name(name: str) -> str:
+    clean_name = name.strip()
+    if not clean_name:
+        raise HTTPException(status_code=422, detail="Nom de categorie requis")
+    return clean_name
 
 
 @app.get("/")
@@ -104,7 +142,13 @@ def get_stats():
             "SELECT COUNT(*) AS question_count, COALESCE(SUM(points), 0) AS max_score FROM question"
         ).fetchone()
         score_stats = conn.execute(
-            "SELECT COUNT(*) AS game_count, COALESCE(MAX(score), 0) AS best_score FROM score"
+            """
+            SELECT
+                COUNT(*) AS game_count,
+                COALESCE(MAX(score), 0) AS best_score,
+                COALESCE(SUM(donation_points), 0) AS donation_points
+            FROM quiz_attempt
+            """
         ).fetchone()
 
     return {
@@ -112,6 +156,7 @@ def get_stats():
         "maxScore": stats["max_score"],
         "gameCount": score_stats["game_count"],
         "bestScore": score_stats["best_score"],
+        "donationPoints": score_stats["donation_points"],
         "categories": [{"name": row["name"], "count": row["count"]} for row in category_rows],
     }
 
@@ -119,9 +164,9 @@ def get_stats():
 @app.get("/api/categories")
 def get_categories():
     with get_db() as conn:
-        rows = conn.execute("SELECT DISTINCT category FROM question ORDER BY category").fetchall()
+        rows = conn.execute("SELECT name FROM category ORDER BY name").fetchall()
 
-    return [row["category"] for row in rows]
+    return [row["name"] for row in rows]
 
 
 @app.get("/api/question")
@@ -164,6 +209,8 @@ def get_random_question(categorie: str | None = None, exclude: str | None = None
         "category": question["category"],
         "points": question["points"],
         "prompt": question["prompt"],
+        "correctAnswer": question["correctAnswer"],
+        "explanation": question["explanation"],
         "answers": answers,
     }
 
@@ -187,6 +234,41 @@ def check_answer(payload: AnswerPayload):
     }
 
 
+@app.post("/api/explanation")
+def check_explanation(payload: ExplanationPayload):
+    with get_db() as conn:
+        row = conn.execute(
+            """
+            SELECT correct_answer, points, explanation, explanation_keywords
+            FROM question
+            WHERE id = %s
+            """,
+            (payload.id,),
+        ).fetchone()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="Question non trouvee")
+
+    keywords = row["explanation_keywords"] or build_default_keywords(row["correct_answer"])
+    normalized_explanation = normalize_text(payload.explanation)
+    matched = [
+        keyword
+        for keyword in keywords
+        if normalize_text(keyword) and normalize_text(keyword) in normalized_explanation
+    ]
+    required_matches = 1 if len(keywords) <= 2 else 2
+    is_valid = len(matched) >= required_matches
+
+    return {
+        "correct": is_valid,
+        "correctAnswer": row["correct_answer"],
+        "points": row["points"] if is_valid else 0,
+        "expectedExplanation": row["explanation"],
+        "matchedKeywords": matched,
+        "requiredMatches": required_matches,
+    }
+
+
 @app.get("/api/leaderboard")
 def get_leaderboard(limit: int = 20):
     if limit < 1 or limit > 100:
@@ -194,6 +276,35 @@ def get_leaderboard(limit: int = 20):
 
     with get_db() as conn:
         return list_scores(conn, limit)
+
+
+@app.get("/api/progress")
+def get_progress_by_category():
+    with get_db() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                category,
+                COUNT(*) AS games,
+                COALESCE(MAX(score), 0) AS best_score,
+                ROUND(COALESCE(AVG(score), 0), 2) AS average_score,
+                COALESCE(SUM(donation_points), 0) AS donation_points
+            FROM quiz_attempt
+            GROUP BY category
+            ORDER BY best_score DESC, category ASC
+            """
+        ).fetchall()
+
+    return [
+        {
+            "category": row["category"],
+            "games": row["games"],
+            "bestScore": row["best_score"],
+            "averageScore": float(row["average_score"]),
+            "donationPoints": row["donation_points"],
+        }
+        for row in rows
+    ]
 
 
 @app.post("/api/scores", status_code=201)
@@ -206,24 +317,38 @@ def create_score(payload: ScorePayload):
     if payload.score > payload.possibleScore and payload.possibleScore > 0:
         raise HTTPException(status_code=422, detail="Le score depasse le score possible")
 
+    donation_points = payload.score
+
     with get_db() as conn:
+        user = conn.execute(
+            """
+            INSERT INTO app_user (pseudo)
+            VALUES (%s)
+            ON CONFLICT (pseudo) DO UPDATE SET pseudo = EXCLUDED.pseudo
+            RETURNING id
+            """,
+            (player_name,),
+        ).fetchone()
         row = conn.execute(
             """
-            INSERT INTO score (
-                player_name, category, score, possible_score,
-                total_questions, correct_answers
-            ) VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO quiz_attempt (
+                user_id, category, score, possible_score,
+                total_questions, correct_answers, donation_points
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
             RETURNING *
             """,
             (
-                player_name,
+                user["id"],
                 category,
                 payload.score,
                 payload.possibleScore,
                 payload.totalQuestions,
                 payload.correctAnswers,
+                donation_points,
             ),
         ).fetchone()
+
+        row["player_name"] = player_name
 
     return row_to_score(row)
 
@@ -252,6 +377,87 @@ def admin_list_questions(_: dict = Depends(require_admin_session)):
         return list_questions(conn)
 
 
+@app.get("/api/admin/categories")
+def admin_list_categories(_: dict = Depends(require_admin_session)):
+    with get_db() as conn:
+        sync_categories(conn)
+        return list_categories(conn)
+
+
+@app.post("/api/admin/categories", status_code=201)
+def admin_create_category(payload: CategoryPayload, _: dict = Depends(require_admin_session)):
+    name = validate_category_name(payload.name)
+
+    with get_db() as conn:
+        row = conn.execute(
+            """
+            INSERT INTO category (name)
+            VALUES (%s)
+            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+            RETURNING id, name
+            """,
+            (name,),
+        ).fetchone()
+
+    return {"id": row["id"], "name": row["name"]}
+
+
+@app.put("/api/admin/categories/{category_id}")
+def admin_update_category(
+    category_id: int,
+    payload: CategoryPayload,
+    _: dict = Depends(require_admin_session),
+):
+    name = validate_category_name(payload.name)
+
+    with get_db() as conn:
+        current = conn.execute("SELECT name FROM category WHERE id = %s", (category_id,)).fetchone()
+        if not current:
+            raise HTTPException(status_code=404, detail="Categorie non trouvee")
+
+        duplicate = conn.execute(
+            "SELECT id FROM category WHERE name = %s AND id <> %s",
+            (name, category_id),
+        ).fetchone()
+        if duplicate:
+            raise HTTPException(status_code=409, detail="Categorie deja existante")
+
+        row = conn.execute(
+            """
+            UPDATE category
+            SET name = %s
+            WHERE id = %s
+            RETURNING id, name
+            """,
+            (name, category_id),
+        ).fetchone()
+        conn.execute(
+            "UPDATE question SET category = %s WHERE category = %s",
+            (name, current["name"]),
+        )
+
+    return {"id": row["id"], "name": row["name"]}
+
+
+@app.delete("/api/admin/categories/{category_id}", status_code=204)
+def admin_delete_category(category_id: int, _: dict = Depends(require_admin_session)):
+    with get_db() as conn:
+        category = conn.execute("SELECT name FROM category WHERE id = %s", (category_id,)).fetchone()
+        if not category:
+            raise HTTPException(status_code=404, detail="Categorie non trouvee")
+
+        used = conn.execute(
+            "SELECT COUNT(*) AS count FROM question WHERE category = %s",
+            (category["name"],),
+        ).fetchone()["count"]
+        if used:
+            raise HTTPException(status_code=409, detail="Categorie utilisee par des questions")
+
+        conn.execute("DELETE FROM category WHERE id = %s", (category_id,))
+
+    return Response(status_code=204)
+
+
 @app.post("/api/admin/questions", status_code=201)
 def admin_create_question(payload: QuestionPayload, _: dict = Depends(require_admin_session)):
     question = validate_question_payload(payload)
@@ -261,8 +467,9 @@ def admin_create_question(payload: QuestionPayload, _: dict = Depends(require_ad
             """
             INSERT INTO question (
                 category, points, prompt,
-                correct_answer, wrong_answer_1, wrong_answer_2, wrong_answer_3
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                correct_answer, wrong_answer_1, wrong_answer_2, wrong_answer_3,
+                explanation, explanation_keywords
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING *
             """,
             (
@@ -273,9 +480,12 @@ def admin_create_question(payload: QuestionPayload, _: dict = Depends(require_ad
                 question.wrongAnswers[0],
                 question.wrongAnswers[1],
                 question.wrongAnswers[2],
+                question.explanation,
+                question.explanationKeywords,
             ),
         )
         row = cursor.fetchone()
+        sync_categories(conn)
 
     return row_to_question(row)
 
@@ -298,7 +508,9 @@ def admin_update_question(
                 correct_answer = %s,
                 wrong_answer_1 = %s,
                 wrong_answer_2 = %s,
-                wrong_answer_3 = %s
+                wrong_answer_3 = %s,
+                explanation = %s,
+                explanation_keywords = %s
             WHERE id = %s
             RETURNING *
             """,
@@ -310,6 +522,8 @@ def admin_update_question(
                 question.wrongAnswers[0],
                 question.wrongAnswers[1],
                 question.wrongAnswers[2],
+                question.explanation,
+                question.explanationKeywords,
                 question_id,
             ),
         )
@@ -318,6 +532,7 @@ def admin_update_question(
             raise HTTPException(status_code=404, detail="Question non trouvee")
 
         row = cursor.fetchone()
+        sync_categories(conn)
 
     return row_to_question(row)
 
@@ -350,8 +565,9 @@ def admin_import_questions(payload: list[QuestionPayload], _: dict = Depends(req
                 """
                 INSERT INTO question (
                     category, points, prompt,
-                    correct_answer, wrong_answer_1, wrong_answer_2, wrong_answer_3
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    correct_answer, wrong_answer_1, wrong_answer_2, wrong_answer_3,
+                    explanation, explanation_keywords
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 [
                     (
@@ -362,8 +578,11 @@ def admin_import_questions(payload: list[QuestionPayload], _: dict = Depends(req
                         question.wrongAnswers[0],
                         question.wrongAnswers[1],
                         question.wrongAnswers[2],
+                        question.explanation,
+                        question.explanationKeywords,
                     )
                     for question in questions
                 ],
             )
+        sync_categories(conn)
         return list_questions(conn)

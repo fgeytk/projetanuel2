@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   checkAdminSession,
+  createCategory,
   createQuestion,
+  deleteCategory,
   deleteQuestion,
+  fetchAdminCategories,
   fetchAdminQuestions,
   importAdminQuestions,
   loginAdmin,
   logoutAdmin,
   resetAdminQuestions,
+  updateCategory,
   updateQuestion,
 } from './lib/api.js'
 
@@ -17,15 +21,28 @@ const emptyForm = {
   prompt: '',
   correctAnswer: '',
   wrongAnswers: ['', '', ''],
+  explanation: '',
+  explanationKeywordsText: '',
 }
 
 function cleanQuestion(question) {
+  const correctAnswer = String(question.correctAnswer || '').trim()
+  const explanation = String(question.explanation || `La bonne reponse est ${correctAnswer}.`).trim()
+  const keywordsText = String(question.explanationKeywordsText || '')
+  const keywordsArray = Array.isArray(question.explanationKeywords) ? question.explanationKeywords : []
+
   return {
-    category: question.category.trim(),
+    category: String(question.category || '').trim(),
     points: Number(question.points),
-    prompt: question.prompt.trim(),
-    correctAnswer: question.correctAnswer.trim(),
-    wrongAnswers: question.wrongAnswers.map((answer) => answer.trim()),
+    prompt: String(question.prompt || '').trim(),
+    correctAnswer,
+    wrongAnswers: (question.wrongAnswers || []).map((answer) => String(answer).trim()),
+    explanation,
+    explanationKeywords: keywordsText
+      .split(',')
+      .map((keyword) => keyword.trim())
+      .filter(Boolean)
+      .concat(keywordsArray.map((keyword) => String(keyword).trim()).filter(Boolean)),
   }
 }
 
@@ -34,6 +51,7 @@ function isValidQuestion(question) {
     question.category &&
     question.prompt &&
     question.correctAnswer &&
+    question.explanation &&
     Number.isFinite(question.points) &&
     question.points > 0 &&
     question.wrongAnswers.length === 3 &&
@@ -48,6 +66,8 @@ function toFormQuestion(question) {
     prompt: question.prompt,
     correctAnswer: question.correctAnswer,
     wrongAnswers: [...question.wrongAnswers],
+    explanation: question.explanation || '',
+    explanationKeywordsText: (question.explanationKeywords || []).join(', '),
   }
 }
 
@@ -114,6 +134,10 @@ export default function BackOffice({ categories, onDataChange }) {
   const [authenticated, setAuthenticated] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
   const [questions, setQuestions] = useState([])
+  const [adminCategories, setAdminCategories] = useState([])
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [editingCategoryId, setEditingCategoryId] = useState(null)
+  const [editingCategoryName, setEditingCategoryName] = useState('')
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [search, setSearch] = useState('')
@@ -154,6 +178,15 @@ export default function BackOffice({ categories, onDataChange }) {
     }
   }
 
+  async function loadCategories() {
+    try {
+      const data = await fetchAdminCategories()
+      setAdminCategories(data)
+    } catch (err) {
+      setMessage(err.message || 'Impossible de charger les categories')
+    }
+  }
+
   useEffect(() => {
     async function verifySession() {
       setCheckingSession(true)
@@ -174,6 +207,7 @@ export default function BackOffice({ categories, onDataChange }) {
   useEffect(() => {
     if (authenticated) {
       loadQuestions()
+      loadCategories()
     }
   }, [authenticated])
 
@@ -231,6 +265,7 @@ export default function BackOffice({ categories, onDataChange }) {
 
       resetForm()
       await onDataChange()
+      await loadCategories()
     } catch (err) {
       setMessage(err.message || 'Enregistrement impossible')
     } finally {
@@ -260,6 +295,7 @@ export default function BackOffice({ categories, onDataChange }) {
       }
       setMessage('Question supprimee.')
       await onDataChange()
+      await loadCategories()
     } catch (err) {
       setMessage(err.message || 'Suppression impossible')
     } finally {
@@ -281,6 +317,7 @@ export default function BackOffice({ categories, onDataChange }) {
       resetForm()
       setMessage('Questions initiales restaurees.')
       await onDataChange()
+      await loadCategories()
     } catch (err) {
       setMessage(err.message || 'Reset impossible')
     } finally {
@@ -293,10 +330,77 @@ export default function BackOffice({ categories, onDataChange }) {
       await logoutAdmin()
     } finally {
       setQuestions([])
+      setAdminCategories([])
       setMessage('')
       resetForm()
     }
     setAuthenticated(false)
+  }
+
+  async function handleCreateCategory(event) {
+    event.preventDefault()
+    if (!newCategoryName.trim()) {
+      return
+    }
+
+    setLoading(true)
+    setMessage('')
+
+    try {
+      await createCategory(newCategoryName)
+      setNewCategoryName('')
+      await loadCategories()
+      await onDataChange()
+      setMessage('Categorie ajoutee.')
+    } catch (err) {
+      setMessage(err.message || 'Creation de categorie impossible')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleUpdateCategory(event) {
+    event.preventDefault()
+    if (!editingCategoryId || !editingCategoryName.trim()) {
+      return
+    }
+
+    setLoading(true)
+    setMessage('')
+
+    try {
+      await updateCategory(editingCategoryId, editingCategoryName)
+      setEditingCategoryId(null)
+      setEditingCategoryName('')
+      await loadCategories()
+      await loadQuestions()
+      await onDataChange()
+      setMessage('Categorie modifiee.')
+    } catch (err) {
+      setMessage(err.message || 'Modification de categorie impossible')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleDeleteCategory(categoryId) {
+    if (!window.confirm('Supprimer cette categorie ?')) {
+      return
+    }
+
+    setLoading(true)
+    setMessage('')
+
+    try {
+      await deleteCategory(categoryId)
+      await loadCategories()
+      await onDataChange()
+      setMessage('Categorie supprimee.')
+    } catch (err) {
+      setMessage(err.message || 'Suppression de categorie impossible')
+    } finally {
+      setLoading(false)
+    }
   }
 
   function exportData() {
@@ -336,6 +440,7 @@ export default function BackOffice({ categories, onDataChange }) {
       resetForm()
       setMessage(`${data.length} questions importees.`)
       await onDataChange()
+      await loadCategories()
     } catch (err) {
       setMessage(err.message || 'Import impossible')
     } finally {
@@ -408,6 +513,22 @@ export default function BackOffice({ categories, onDataChange }) {
               onChange={(value) => updateWrongAnswer(index, value)}
             />
           ))}
+          <label className="form-field form-field--wide">
+            Explication attendue
+            <textarea
+              value={form.explanation}
+              onChange={(event) => setForm((current) => ({ ...current, explanation: event.target.value }))}
+              required
+            />
+          </label>
+          <label className="form-field form-field--wide">
+            Mots-cles de validation
+            <input
+              value={form.explanationKeywordsText}
+              onChange={(event) => setForm((current) => ({ ...current, explanationKeywordsText: event.target.value }))}
+              placeholder="Ex : capitale, france, paris"
+            />
+          </label>
 
           {message && <p className="form-message">{message}</p>}
 
@@ -422,6 +543,65 @@ export default function BackOffice({ categories, onDataChange }) {
             )}
           </div>
         </form>
+
+        <section className="question-form">
+          <div className="section-heading">
+            <p className="eyebrow">Categories</p>
+            <h3>Gestion</h3>
+          </div>
+
+          <form className="category-admin-form" onSubmit={handleCreateCategory}>
+            <label className="form-field">
+              Nouvelle categorie
+              <input value={newCategoryName} onChange={(event) => setNewCategoryName(event.target.value)} />
+            </label>
+            <button type="submit" className="button button--primary" disabled={loading}>
+              Ajouter
+            </button>
+          </form>
+
+          {editingCategoryId && (
+            <form className="category-admin-form" onSubmit={handleUpdateCategory}>
+              <label className="form-field">
+                Renommer la categorie
+                <input
+                  value={editingCategoryName}
+                  onChange={(event) => setEditingCategoryName(event.target.value)}
+                />
+              </label>
+              <button type="submit" className="button button--primary" disabled={loading}>
+                Enregistrer
+              </button>
+            </form>
+          )}
+
+          <div className="category-admin-list">
+            {adminCategories.map((category) => (
+              <div key={category.id}>
+                <strong>{category.name}</strong>
+                <div className="button-row">
+                  <button
+                    type="button"
+                    className="button button--compact"
+                    onClick={() => {
+                      setEditingCategoryId(category.id)
+                      setEditingCategoryName(category.name)
+                    }}
+                  >
+                    Modifier
+                  </button>
+                  <button
+                    type="button"
+                    className="button button--compact button--danger"
+                    onClick={() => handleDeleteCategory(category.id)}
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <section className="question-list">
           <div className="list-controls">

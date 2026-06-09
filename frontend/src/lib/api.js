@@ -51,8 +51,19 @@ export async function submitAnswer(questionId, answer) {
   })
 }
 
+export async function submitExplanation(questionId, explanation) {
+  return apiFetch('/explanation', {
+    method: 'POST',
+    body: JSON.stringify({ id: questionId, explanation }),
+  })
+}
+
 export async function fetchLeaderboard(limit = 20) {
   return apiFetch(`/leaderboard?limit=${limit}`)
+}
+
+export async function fetchProgress() {
+  return apiFetch('/progress')
 }
 
 export async function saveScore(score) {
@@ -81,6 +92,30 @@ export async function logoutAdmin() {
 
 export async function fetchAdminQuestions() {
   return apiFetch('/admin/questions')
+}
+
+export async function fetchAdminCategories() {
+  return apiFetch('/admin/categories')
+}
+
+export async function createCategory(name) {
+  return apiFetch('/admin/categories', {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  })
+}
+
+export async function updateCategory(categoryId, name) {
+  return apiFetch(`/admin/categories/${categoryId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ name }),
+  })
+}
+
+export async function deleteCategory(categoryId) {
+  return apiFetch(`/admin/categories/${categoryId}`, {
+    method: 'DELETE',
+  })
 }
 
 export async function createQuestion(question) {
