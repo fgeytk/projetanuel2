@@ -1,2 +1,2 @@
 export const ASSOCIATION_NAME = 'UNICEF'
-export const APP_NAME = 'Quiz Arena'
+export const APP_NAME = 'Quiz Brain'

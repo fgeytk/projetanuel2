@@ -135,11 +135,11 @@ class VotePayload(BaseModel):
 async def lifespan(_: FastAPI):
     setup_logging(os.environ.get("LOG_LEVEL", "INFO"))
     init_db()
-    logger.info("Quiz Arena API démarrée")
+    logger.info("Quiz Brain API démarrée")
     yield
 
 
-app = FastAPI(title="Quiz Arena API", docs_url=None, redoc_url=None, lifespan=lifespan)
+app = FastAPI(title="Quiz Brain API", docs_url=None, redoc_url=None, lifespan=lifespan)
 
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestLogMiddleware)
@@ -271,7 +271,7 @@ def award_user_badges(conn, user_id):
 
 @app.get("/")
 def root():
-    return {"name": "Quiz Arena API", "status": "ok"}
+    return {"name": "Quiz Brain API", "status": "ok"}
 
 
 @app.get("/health")

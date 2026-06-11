@@ -1150,5 +1150,245 @@
       "Baijiu",
       "Shochu"
     ]
+  },
+  {
+    "id": 101,
+    "category": "Culture Web",
+    "points": 10,
+    "prompt": "Quel réseau social est connu pour ses vidéos courtes et ses danses virales ?",
+    "correctAnswer": "TikTok",
+    "wrongAnswers": [
+      "LinkedIn",
+      "Pinterest",
+      "Reddit"
+    ]
+  },
+  {
+    "id": 102,
+    "category": "Culture Web",
+    "points": 10,
+    "prompt": "Comment appelle-t-on une personne qui poste des commentaires provocateurs sur internet ?",
+    "correctAnswer": "Troll",
+    "wrongAnswers": [
+      "Lurker",
+      "Influenceur",
+      "Modérateur"
+    ]
+  },
+  {
+    "id": 103,
+    "category": "Culture Web",
+    "points": 15,
+    "prompt": "Quel félin est devenu le symbole des mèmes sur internet ?",
+    "correctAnswer": "Le chat",
+    "wrongAnswers": [
+      "Le chien",
+      "Le hamster",
+      "Le furet"
+    ]
+  },
+  {
+    "id": 104,
+    "category": "Culture Web",
+    "points": 15,
+    "prompt": "Que signifie l'acronyme \"LOL\" ?",
+    "correctAnswer": "Laughing Out Loud",
+    "wrongAnswers": [
+      "Lots Of Love",
+      "League Of Legends",
+      "Live On Line"
+    ]
+  },
+  {
+    "id": 105,
+    "category": "Vie quotidienne",
+    "points": 10,
+    "prompt": "Quel objet du quotidien disparaît toujours mystérieusement par paire ?",
+    "correctAnswer": "Les chaussettes",
+    "wrongAnswers": [
+      "Les clés",
+      "Les stylos",
+      "Les briquets"
+    ]
+  },
+  {
+    "id": 106,
+    "category": "Vie quotidienne",
+    "points": 10,
+    "prompt": "Quel est le pire moment pour que le wifi tombe en panne ?",
+    "correctAnswer": "En pleine réunion",
+    "wrongAnswers": [
+      "La nuit",
+      "Le matin",
+      "En vacances"
+    ]
+  },
+  {
+    "id": 107,
+    "category": "Vie quotidienne",
+    "points": 15,
+    "prompt": "Quelle excuse classique donne-t-on pour justifier un retard ?",
+    "correctAnswer": "Les transports",
+    "wrongAnswers": [
+      "Le réveil",
+      "La météo",
+      "Le chat"
+    ]
+  },
+  {
+    "id": 108,
+    "category": "Vie quotidienne",
+    "points": 15,
+    "prompt": "Que fait-on toujours semblant d'avoir lu avant de cliquer sur \"Accepter\" ?",
+    "correctAnswer": "Les conditions d'utilisation",
+    "wrongAnswers": [
+      "La notice",
+      "Le contrat",
+      "Les emails"
+    ]
+  },
+  {
+    "id": 109,
+    "category": "Jeux vidéo",
+    "points": 10,
+    "prompt": "Quel plombier moustachu est la mascotte de Nintendo ?",
+    "correctAnswer": "Mario",
+    "wrongAnswers": [
+      "Luigi",
+      "Sonic",
+      "Kirby"
+    ]
+  },
+  {
+    "id": 110,
+    "category": "Jeux vidéo",
+    "points": 15,
+    "prompt": "Dans quel jeu construit-on des structures avec des blocs cubiques ?",
+    "correctAnswer": "Minecraft",
+    "wrongAnswers": [
+      "Fortnite",
+      "Roblox",
+      "Tetris"
+    ]
+  },
+  {
+    "id": 111,
+    "category": "Jeux vidéo",
+    "points": 15,
+    "prompt": "Quel animal jaune électrique est la star de Pokémon ?",
+    "correctAnswer": "Pikachu",
+    "wrongAnswers": [
+      "Salamèche",
+      "Bulbizarre",
+      "Carapuce"
+    ]
+  },
+  {
+    "id": 112,
+    "category": "Séries TV",
+    "points": 15,
+    "prompt": "Dans quelle série un prof de chimie devient fabricant de drogue ?",
+    "correctAnswer": "Breaking Bad",
+    "wrongAnswers": [
+      "Dexter",
+      "The Wire",
+      "Narcos"
+    ]
+  },
+  {
+    "id": 113,
+    "category": "Séries TV",
+    "points": 10,
+    "prompt": "Quelle sitcom suit un groupe d'amis dans un café new-yorkais ?",
+    "correctAnswer": "Friends",
+    "wrongAnswers": [
+      "How I Met Your Mother",
+      "Seinfeld",
+      "The Big Bang Theory"
+    ]
+  },
+  {
+    "id": 114,
+    "category": "Séries TV",
+    "points": 20,
+    "prompt": "Dans quelle série voit-on des dragons et un Trône de Fer ?",
+    "correctAnswer": "Game of Thrones",
+    "wrongAnswers": [
+      "Vikings",
+      "The Witcher",
+      "Le Seigneur des Anneaux"
+    ]
+  },
+  {
+    "id": 115,
+    "category": "Insolite",
+    "points": 15,
+    "prompt": "Quel aliment ne périme jamais et a été retrouvé intact dans des tombes égyptiennes ?",
+    "correctAnswer": "Le miel",
+    "wrongAnswers": [
+      "Le pain",
+      "Le sel",
+      "Le riz"
+    ]
+  },
+  {
+    "id": 116,
+    "category": "Insolite",
+    "points": 20,
+    "prompt": "Quel animal est incapable de sauter ?",
+    "correctAnswer": "L'éléphant",
+    "wrongAnswers": [
+      "Le kangourou",
+      "La grenouille",
+      "Le lapin"
+    ]
+  },
+  {
+    "id": 117,
+    "category": "Insolite",
+    "points": 15,
+    "prompt": "Combien de cœurs possède une pieuvre ?",
+    "correctAnswer": "3",
+    "wrongAnswers": [
+      "1",
+      "2",
+      "5"
+    ]
+  },
+  {
+    "id": 118,
+    "category": "Insolite",
+    "points": 20,
+    "prompt": "Quel fruit flotte parce qu'il est composé à 25 % d'air ?",
+    "correctAnswer": "La pomme",
+    "wrongAnswers": [
+      "La banane",
+      "L'orange",
+      "La fraise"
+    ]
+  },
+  {
+    "id": 119,
+    "category": "Culture Web",
+    "points": 20,
+    "prompt": "Quelle plateforme de streaming vidéo appartient à Google ?",
+    "correctAnswer": "YouTube",
+    "wrongAnswers": [
+      "Twitch",
+      "Dailymotion",
+      "Vimeo"
+    ]
+  },
+  {
+    "id": 120,
+    "category": "Vie quotidienne",
+    "points": 20,
+    "prompt": "Quel ustensile finit toujours par manquer quand on fait la vaisselle ?",
+    "correctAnswer": "La petite cuillère",
+    "wrongAnswers": [
+      "La fourchette",
+      "Le couteau",
+      "La louche"
+    ]
   }
 ]

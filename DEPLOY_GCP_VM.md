@@ -1,7 +1,6 @@
 # Deploiement GCP VM
 
-Ce guide deploie Quiz Arena sur une VM Google Cloud avec Docker Compose.
-Ce guide couvre le deploiement de Quiz Arena sur une VM Google Cloud avec Docker Compose, en particulier le cas ou une VM existe deja et fait tourner une ancienne version du site.
+Ce guide couvre le deploiement de Quiz Brain sur une VM Google Cloud avec Docker Compose, y compris le cas ou une VM existe deja et fait tourner une ancienne version du site.
 
 Le principe en production est simple :
 
@@ -51,8 +50,8 @@ docker compose version
 Si la VM n'a jamais heberge le projet :
 
 ```bash
-git clone <URL_DU_REPO> quiz-arena
-cd quiz-arena
+git clone <URL_DU_REPO> quiz-brain
+cd quiz-brain
 cp .env.production.example .env
 ```
 

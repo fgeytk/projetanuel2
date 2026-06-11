@@ -53,7 +53,7 @@ export default function AuthModal({ initialMode = 'login', onClose, onSuccess })
       <div className="modal" role="dialog" aria-modal="true" aria-label="Connexion">
         <div className="modal__head">
           <div>
-            <p className="eyebrow">Quiz Arena</p>
+            <p className="eyebrow">Quiz Brain</p>
             <h2>{mode === 'register' ? 'Rejoins la troupe' : 'Connexion'}</h2>
           </div>
           <button type="button" className="modal__close" onClick={onClose} aria-label="Fermer">

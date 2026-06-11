@@ -1,6 +1,6 @@
-# Quiz Arena — Le concours de vannes
+# Quiz Brain — Le concours de vannes
 
-Quiz Arena est une application web ou les joueurs s'affrontent a coups d'humour. Une question s'affiche, et chaque joueur doit ecrire la reponse la plus drole possible — sans connaitre la bonne reponse. Le public vote ensuite pour les vannes les plus marrantes.
+Quiz Brain est une application web ou les joueurs s'affrontent a coups d'humour. Une question s'affiche, et chaque joueur doit ecrire la reponse la plus drole possible — sans connaitre la bonne reponse. Le public vote ensuite pour les vannes les plus marrantes.
 
 Les joueurs peuvent creer un compte pour debloquer des badges, suivre leur progression et reserver leur nom de scene au classement. Le mode invite reste disponible sans compte. A la fin d'un passage, une carte de score partageable est generee (partage natif, copie ou image PNG).
 

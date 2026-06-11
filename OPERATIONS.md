@@ -1,4 +1,4 @@
-# Quiz Arena — Exploitation & déploiement
+# Quiz Brain — Exploitation & déploiement
 
 ## Architecture
 - **frontend** : React 18 + Vite, servi par Nginx en prod (proxy `/api` → backend).

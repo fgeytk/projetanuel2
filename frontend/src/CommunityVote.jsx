@@ -12,7 +12,7 @@ function formatDate(value) {
 
 function statusLabel(status) {
   if (status === 'accepted') {
-    return 'A fait rire 😂'
+    return 'A fait rire l\'audience'
   }
   if (status === 'rejected') {
     return 'Bide total'

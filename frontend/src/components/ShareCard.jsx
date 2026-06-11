@@ -81,7 +81,7 @@ export default function ShareCard({ result }) {
     try {
       const canvas = drawCard(result)
       const link = document.createElement('a')
-      link.download = `quiz-arena-${result.playerName}.png`
+      link.download = `quiz-brain-${result.playerName}.png`
       link.href = canvas.toDataURL('image/png')
       link.click()
     } catch {

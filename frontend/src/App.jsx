@@ -179,7 +179,7 @@ export default function App() {
           <span className="brand-mark">QA</span>
           <div>
             <p className="eyebrow">Concours de vannes</p>
-            <h1 style={{ fontSize: '1.6rem' }}>Quiz Arena</h1>
+            <h1 style={{ fontSize: '1.6rem' }}>Quiz Brain</h1>
           </div>
         </div>
 
