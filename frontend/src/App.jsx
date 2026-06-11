@@ -22,17 +22,88 @@ const emptyStats = {
   voteCount: 0,
 }
 
+// Navigation publique : identique pour tous. L'accès admin vit dans le menu compte.
 const NAV_ITEMS = [
   { id: 'home', label: 'Accueil' },
   { id: 'play', label: 'Jouer' },
   { id: 'leaderboard', label: 'Classement' },
   { id: 'votes', label: 'Votes' },
-  { id: 'profile', label: 'Profil' },
-  { id: 'admin', label: 'Admin' },
 ]
 
+function AccountMenu({ user, onNavigate, onLogout }) {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef(null)
+  const isAdmin = user.role === 'admin'
+
+  useEffect(() => {
+    if (!open) {
+      return undefined
+    }
+
+    function onPointerDown(event) {
+      if (rootRef.current && !rootRef.current.contains(event.target)) {
+        setOpen(false)
+      }
+    }
+    function onKeyDown(event) {
+      if (event.key === 'Escape') {
+        setOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  function select(action) {
+    setOpen(false)
+    action()
+  }
+
+  return (
+    <div className="account-menu" ref={rootRef}>
+      <button
+        type="button"
+        className="account-menu__trigger"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <Avatar seed={user.avatarSeed || user.pseudo} size="sm" />
+        <span className="account-menu__name">{user.pseudo}</span>
+        <span className="account-menu__caret" aria-hidden="true" />
+      </button>
+
+      {open && (
+        <div className="account-menu__panel" role="menu" aria-label="Menu du compte">
+          <button type="button" role="menuitem" onClick={() => select(() => onNavigate('profile'))}>
+            Profil
+          </button>
+          {isAdmin && (
+            <button type="button" role="menuitem" onClick={() => select(() => onNavigate('admin'))}>
+              Administration
+            </button>
+          )}
+          <button
+            type="button"
+            role="menuitem"
+            className="account-menu__logout"
+            onClick={() => select(onLogout)}
+          >
+            Se déconnecter
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function App() {
-  const { user, logout } = useAuth()
+  const { user, ready, logout } = useAuth()
   const [view, setView] = useState('home')
   const [stats, setStats] = useState(emptyStats)
   const [loading, setLoading] = useState(true)
@@ -40,6 +111,8 @@ export default function App() {
   const [authOpen, setAuthOpen] = useState(false)
   const [toasts, setToasts] = useState([])
   const toastId = useRef(0)
+
+  const isAdmin = user?.role === 'admin'
 
   const pushToast = useCallback((toast) => {
     toastId.current += 1
@@ -67,9 +140,26 @@ export default function App() {
     loadStats()
   }, [loadStats])
 
+  // Garde de route : les vues protégées ne restent jamais affichées sans le bon rôle.
+  useEffect(() => {
+    if (!ready) {
+      return
+    }
+    if (view === 'admin' && !isAdmin) {
+      setView('home')
+    }
+    if (view === 'profile' && !user) {
+      setView('home')
+    }
+  }, [ready, view, isAdmin, user])
+
   function goTo(id) {
     if (id === 'profile' && !user) {
       setAuthOpen(true)
+      return
+    }
+    if (id === 'admin' && !isAdmin) {
+      setView('home')
       return
     }
     setView(id)
@@ -77,13 +167,15 @@ export default function App() {
 
   async function handleLogout() {
     await logout()
-    if (view === 'profile') {
-      setView('home')
-    }
+    setView('home')
   }
 
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#contenu">
+        Aller au contenu
+      </a>
+
       <header className="app-header">
         <div className="brand-lockup">
           <span className="brand-mark">QA</span>
@@ -100,6 +192,7 @@ export default function App() {
                 key={item.id}
                 type="button"
                 onClick={() => goTo(item.id)}
+                aria-current={view === item.id ? 'page' : undefined}
                 className={view === item.id ? 'tab-button tab-button--active' : 'tab-button'}
               >
                 {item.label}
@@ -108,13 +201,7 @@ export default function App() {
           </nav>
 
           {user ? (
-            <div className="auth-pill">
-              <Avatar seed={user.avatarSeed || user.pseudo} size="sm" />
-              <span className="auth-pill__name">{user.pseudo}</span>
-              <button type="button" className="button button--compact button--ghost" onClick={handleLogout}>
-                Quitter
-              </button>
-            </div>
+            <AccountMenu user={user} onNavigate={goTo} onLogout={handleLogout} />
           ) : (
             <button type="button" className="button button--primary button--compact" onClick={() => setAuthOpen(true)}>
               Se connecter
@@ -124,74 +211,76 @@ export default function App() {
       </header>
 
       {error && (
-        <div className="app-alert">
+        <div className="app-alert" role="alert">
           <strong>Backend indisponible</strong>
           <span>{error}</span>
         </div>
       )}
 
-      {loading ? (
-        <main className="page-grid">
-          <section className="quiz-panel">
-            <p className="eyebrow">Chargement</p>
-            <h2>Connexion au backend...</h2>
-          </section>
-        </main>
-      ) : view === 'home' ? (
-        <>
-          <Hero stats={stats} user={user} onPlay={() => setView('play')} onOpenAuth={() => setAuthOpen(true)} />
-          <section className="summary-strip" aria-label="Statistiques du quiz">
-            <div>
-              <strong>{stats.questionCount}</strong>
-              <span>questions</span>
-            </div>
-            <div>
-              <strong>{stats.categories.length}</strong>
-              <span>catégories</span>
-            </div>
-            <div>
-              <strong>{stats.bestScore}</strong>
-              <span>record</span>
-            </div>
-            <div>
-              <strong>{stats.donationPoints}</strong>
-              <span>points solidaires</span>
-            </div>
-            <div>
-              <strong>{stats.explanationCount}</strong>
-              <span>explications</span>
-            </div>
-            <div>
-              <strong>{stats.voteCount}</strong>
-              <span>votes publics</span>
-            </div>
-          </section>
-        </>
-      ) : view === 'play' ? (
-        <FrontOffice
-          stats={stats}
-          onScoreSaved={loadStats}
-          onOpenLeaderboard={() => setView('leaderboard')}
-          onBadges={(badges) =>
-            badges.forEach((badge) =>
-              pushToast({
-                variant: 'badge',
-                icon: badge.icon,
-                title: 'Nouveau badge !',
-                message: badge.name,
-              }),
-            )
-          }
-        />
-      ) : view === 'leaderboard' ? (
-        <Leaderboard />
-      ) : view === 'votes' ? (
-        <CommunityVote onVoteSaved={loadStats} />
-      ) : view === 'profile' ? (
-        <Profile onPlay={() => setView('play')} onOpenAuth={() => setAuthOpen(true)} />
-      ) : (
-        <BackOffice categories={stats.categories.map((category) => category.name)} onDataChange={loadStats} />
-      )}
+      <div id="contenu">
+        {loading ? (
+          <main className="page-grid">
+            <section className="quiz-panel">
+              <p className="eyebrow">Chargement</p>
+              <h2>Connexion au backend...</h2>
+            </section>
+          </main>
+        ) : view === 'home' ? (
+          <>
+            <Hero stats={stats} user={user} onPlay={() => setView('play')} onOpenAuth={() => setAuthOpen(true)} />
+            <section className="summary-strip" aria-label="Statistiques du quiz">
+              <div>
+                <strong>{stats.questionCount}</strong>
+                <span>questions</span>
+              </div>
+              <div>
+                <strong>{stats.categories.length}</strong>
+                <span>catégories</span>
+              </div>
+              <div>
+                <strong>{stats.bestScore}</strong>
+                <span>record</span>
+              </div>
+              <div>
+                <strong>{stats.donationPoints}</strong>
+                <span>points solidaires</span>
+              </div>
+              <div>
+                <strong>{stats.explanationCount}</strong>
+                <span>explications</span>
+              </div>
+              <div>
+                <strong>{stats.voteCount}</strong>
+                <span>votes publics</span>
+              </div>
+            </section>
+          </>
+        ) : view === 'play' ? (
+          <FrontOffice
+            stats={stats}
+            onScoreSaved={loadStats}
+            onOpenLeaderboard={() => setView('leaderboard')}
+            onBadges={(badges) =>
+              badges.forEach((badge) =>
+                pushToast({
+                  variant: 'badge',
+                  icon: badge.icon,
+                  title: 'Nouveau badge !',
+                  message: badge.name,
+                }),
+              )
+            }
+          />
+        ) : view === 'leaderboard' ? (
+          <Leaderboard />
+        ) : view === 'votes' ? (
+          <CommunityVote onVoteSaved={loadStats} />
+        ) : view === 'profile' ? (
+          <Profile onPlay={() => setView('play')} onOpenAuth={() => setAuthOpen(true)} />
+        ) : isAdmin ? (
+          <BackOffice categories={stats.categories.map((category) => category.name)} onDataChange={loadStats} />
+        ) : null}
+      </div>
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} onSuccess={() => setView('profile')} />}
 

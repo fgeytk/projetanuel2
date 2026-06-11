@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import time
 from pathlib import Path
@@ -6,10 +7,12 @@ from pathlib import Path
 import psycopg
 from psycopg.rows import dict_row
 
-
 BASE_DIR = Path(__file__).resolve().parent
+MIGRATIONS_DIR = BASE_DIR / "migrations"
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://quiz:quiz@localhost:5432/quiz")
 SEED_PATH = Path(os.environ.get("QUIZ_SEED_PATH", BASE_DIR / "data" / "questions.seed.json"))
+
+logger = logging.getLogger("quiz.db")
 
 
 def get_db():
@@ -19,25 +22,70 @@ def get_db():
 def init_db():
     conn = connect_with_retry()
     try:
-        create_category_table(conn)
-        create_user_table(conn)
-        ensure_user_columns(conn)
-        create_question_table(conn)
-        ensure_question_learning_columns(conn)
-        create_score_table(conn)
-        create_quiz_attempt_table(conn)
-        create_answer_explanation_table(conn)
-        create_explanation_vote_table(conn)
-        create_admin_session_table(conn)
-        create_user_session_table(conn)
-        create_user_badge_table(conn)
+        run_migrations(conn)
         count = conn.execute("SELECT COUNT(*) AS count FROM question").fetchone()["count"]
         if count == 0:
             seed_questions(conn)
         sync_categories(conn)
+        bootstrap_admin(conn)
         conn.commit()
     finally:
         conn.close()
+
+
+def run_migrations(conn):
+    """Applique les fichiers backend/migrations/*.sql dans l'ordre, une seule fois chacun."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS schema_migration (
+            version TEXT PRIMARY KEY,
+            applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+        """
+    )
+    applied = {row["version"] for row in conn.execute("SELECT version FROM schema_migration").fetchall()}
+
+    for path in sorted(MIGRATIONS_DIR.glob("*.sql")):
+        if path.name in applied:
+            continue
+        logger.info("Applying migration %s", path.name)
+        conn.execute(path.read_text(encoding="utf-8"))
+        conn.execute("INSERT INTO schema_migration (version) VALUES (%s)", (path.name,))
+    conn.commit()
+
+
+def bootstrap_admin(conn):
+    """Crée/promeut le compte admin depuis l'environnement (jamais de secret en dur).
+
+    ADMIN_PSEUDO + ADMIN_PASSWORD_HASH (recommandé) ou ADMIN_PASSWORD (dev local).
+    Sans ces variables, aucun admin n'est créé.
+    """
+    pseudo = os.environ.get("ADMIN_PSEUDO", "").strip()
+    password_hash = os.environ.get("ADMIN_PASSWORD_HASH", "").strip()
+    plain_password = os.environ.get("ADMIN_PASSWORD", "")
+
+    if not pseudo:
+        return
+    if not password_hash and plain_password:
+        try:
+            from .auth import hash_password
+        except ImportError:
+            from auth import hash_password
+        password_hash = hash_password(plain_password)
+    if not password_hash:
+        logger.warning("ADMIN_PSEUDO défini sans ADMIN_PASSWORD_HASH : compte admin non créé")
+        return
+
+    conn.execute(
+        """
+        INSERT INTO app_user (pseudo, password_hash, role, avatar_seed)
+        VALUES (%s, %s, 'admin', %s)
+        ON CONFLICT (pseudo) DO UPDATE
+        SET password_hash = EXCLUDED.password_hash, role = 'admin'
+        """,
+        (pseudo, password_hash, pseudo),
+    )
+    logger.info("Compte admin '%s' prêt", pseudo)
 
 
 def connect_with_retry(max_attempts=30, delay_seconds=1):
@@ -51,238 +99,6 @@ def connect_with_retry(max_attempts=30, delay_seconds=1):
             time.sleep(delay_seconds)
 
     raise RuntimeError("Connexion PostgreSQL impossible") from last_error
-
-
-def create_question_table(conn):
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS question (
-            id SERIAL PRIMARY KEY,
-            category TEXT NOT NULL,
-            points INTEGER NOT NULL CHECK (points > 0),
-            prompt TEXT NOT NULL,
-            correct_answer TEXT NOT NULL,
-            wrong_answer_1 TEXT NOT NULL,
-            wrong_answer_2 TEXT NOT NULL,
-            wrong_answer_3 TEXT NOT NULL,
-            explanation TEXT NOT NULL DEFAULT '',
-            explanation_keywords TEXT[] NOT NULL DEFAULT '{}'
-        )
-        """
-    )
-
-
-def create_category_table(conn):
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS category (
-            id SERIAL PRIMARY KEY,
-            name TEXT NOT NULL UNIQUE,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )
-        """
-    )
-
-
-def create_user_table(conn):
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS app_user (
-            id SERIAL PRIMARY KEY,
-            pseudo TEXT NOT NULL UNIQUE,
-            email TEXT,
-            role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
-            email_verified BOOLEAN NOT NULL DEFAULT FALSE,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )
-        """
-    )
-
-
-def ensure_user_columns(conn):
-    conn.execute("ALTER TABLE app_user ADD COLUMN IF NOT EXISTS email TEXT")
-    conn.execute("ALTER TABLE app_user ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user'")
-    conn.execute("ALTER TABLE app_user ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE")
-    conn.execute("ALTER TABLE app_user ADD COLUMN IF NOT EXISTS password_hash TEXT")
-    conn.execute("ALTER TABLE app_user ADD COLUMN IF NOT EXISTS avatar_seed TEXT")
-    # Backfill an avatar seed for accounts created before this column existed.
-    conn.execute("UPDATE app_user SET avatar_seed = pseudo WHERE avatar_seed IS NULL")
-    conn.execute(
-        """
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_app_user_email
-        ON app_user (email)
-        WHERE email IS NOT NULL
-        """
-    )
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_app_user_role ON app_user (role)")
-    conn.execute(
-        """
-        DO $$
-        BEGIN
-            IF NOT EXISTS (
-                SELECT 1
-                FROM pg_constraint
-                WHERE conname = 'app_user_role_check'
-            ) THEN
-                ALTER TABLE app_user
-                ADD CONSTRAINT app_user_role_check CHECK (role IN ('user', 'admin'));
-            END IF;
-        END $$;
-        """
-    )
-
-
-def ensure_question_learning_columns(conn):
-    conn.execute("ALTER TABLE question ADD COLUMN IF NOT EXISTS explanation TEXT NOT NULL DEFAULT ''")
-    conn.execute("ALTER TABLE question ADD COLUMN IF NOT EXISTS explanation_keywords TEXT[] NOT NULL DEFAULT '{}'")
-    conn.execute(
-        """
-        UPDATE question
-        SET explanation = CONCAT('La bonne reponse est ', correct_answer, '.'),
-            explanation_keywords = ARRAY[LOWER(correct_answer)]
-        WHERE explanation = '' OR explanation_keywords = '{}'
-        """
-    )
-
-
-def create_score_table(conn):
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS score (
-            id SERIAL PRIMARY KEY,
-            player_name TEXT NOT NULL,
-            category TEXT NOT NULL,
-            score INTEGER NOT NULL CHECK (score >= 0),
-            possible_score INTEGER NOT NULL CHECK (possible_score >= 0),
-            total_questions INTEGER NOT NULL CHECK (total_questions >= 0),
-            correct_answers INTEGER NOT NULL CHECK (correct_answers >= 0),
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )
-        """
-    )
-
-
-def create_quiz_attempt_table(conn):
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS quiz_attempt (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
-            category TEXT NOT NULL,
-            score INTEGER NOT NULL CHECK (score >= 0),
-            possible_score INTEGER NOT NULL CHECK (possible_score >= 0),
-            total_questions INTEGER NOT NULL CHECK (total_questions >= 0),
-            correct_answers INTEGER NOT NULL CHECK (correct_answers >= 0),
-            donation_points INTEGER NOT NULL CHECK (donation_points >= 0),
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )
-        """
-    )
-
-
-def create_answer_explanation_table(conn):
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS answer_explanation (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES app_user(id) ON DELETE SET NULL,
-            question_id INTEGER NOT NULL REFERENCES question(id) ON DELETE CASCADE,
-            player_name TEXT NOT NULL,
-            category TEXT NOT NULL,
-            question_prompt TEXT NOT NULL,
-            correct_answer TEXT NOT NULL,
-            explanation TEXT NOT NULL,
-            automatic_correct BOOLEAN NOT NULL DEFAULT FALSE,
-            proposed_points INTEGER NOT NULL CHECK (proposed_points >= 0),
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )
-        """
-    )
-    conn.execute(
-        """
-        CREATE INDEX IF NOT EXISTS idx_answer_explanation_created_at
-        ON answer_explanation (created_at DESC)
-        """
-    )
-    conn.execute(
-        """
-        CREATE INDEX IF NOT EXISTS idx_answer_explanation_question_id
-        ON answer_explanation (question_id)
-        """
-    )
-
-
-def create_explanation_vote_table(conn):
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS explanation_vote (
-            id SERIAL PRIMARY KEY,
-            explanation_id INTEGER NOT NULL REFERENCES answer_explanation(id) ON DELETE CASCADE,
-            voter_name TEXT NOT NULL,
-            approve BOOLEAN NOT NULL,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            UNIQUE (explanation_id, voter_name)
-        )
-        """
-    )
-    conn.execute(
-        """
-        CREATE INDEX IF NOT EXISTS idx_explanation_vote_explanation_id
-        ON explanation_vote (explanation_id)
-        """
-    )
-
-
-def create_admin_session_table(conn):
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS admin_session (
-            id SERIAL PRIMARY KEY,
-            token_hash TEXT NOT NULL UNIQUE,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            expires_at TIMESTAMPTZ NOT NULL
-        )
-        """
-    )
-    conn.execute(
-        """
-        CREATE INDEX IF NOT EXISTS idx_admin_session_expires_at
-        ON admin_session (expires_at)
-        """
-    )
-
-
-def create_user_session_table(conn):
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS user_session (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
-            token_hash TEXT NOT NULL UNIQUE,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            expires_at TIMESTAMPTZ NOT NULL
-        )
-        """
-    )
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_user_session_expires_at ON user_session (expires_at)"
-    )
-
-
-def create_user_badge_table(conn):
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS user_badge (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
-            badge_code TEXT NOT NULL,
-            unlocked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            UNIQUE (user_id, badge_code)
-        )
-        """
-    )
 
 
 def seed_questions(conn):
@@ -320,7 +136,7 @@ def seed_questions(conn):
 
 def reset_db():
     with get_db() as conn:
-        conn.execute("TRUNCATE question RESTART IDENTITY")
+        conn.execute("TRUNCATE question RESTART IDENTITY CASCADE")
         seed_questions(conn)
         sync_categories(conn)
         conn.commit()

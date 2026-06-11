@@ -118,7 +118,7 @@
 
 .button:hover:not(:disabled) {
   border-color: var(--cyan);
-  box-shadow: 0 0 0 1px rgba(45, 226, 255, 0.25);
+  box-shadow: 0 0 0 1px rgba(201, 168, 92, 0.25);
   transform: translateY(-1px);
 }
 
@@ -545,9 +545,9 @@
   display: grid;
   gap: var(--s-2);
   padding: var(--s-4);
-  border: 1px solid rgba(184, 255, 60, 0.35);
+  border: 1px solid var(--success-border);
   border-radius: var(--r-md);
-  background: rgba(184, 255, 60, 0.07);
+  background: var(--success-bg);
 }
 
 .answer-reveal span {
@@ -586,9 +586,9 @@
 }
 
 .feedback--success {
-  border-color: rgba(184, 255, 60, 0.4);
-  background: rgba(184, 255, 60, 0.08);
-  color: #d8ff9b;
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-strong);
 }
 
 .feedback--error {
@@ -677,8 +677,8 @@
   border: 1px solid var(--stroke-strong);
   border-radius: var(--r-lg);
   background:
-    radial-gradient(600px 300px at 80% -20%, rgba(255, 60, 172, 0.25), transparent 60%),
-    radial-gradient(500px 300px at 0% 120%, rgba(45, 226, 255, 0.2), transparent 60%),
+    radial-gradient(600px 300px at 80% -20%, rgba(217, 179, 106, 0.12), transparent 60%),
+    radial-gradient(500px 300px at 0% 120%, rgba(141, 157, 177, 0.1), transparent 60%),
     var(--bg-700);
 }
 
@@ -953,8 +953,8 @@
 }
 
 .status-pill--accepted {
-  background: rgba(184, 255, 60, 0.12);
-  border-color: rgba(184, 255, 60, 0.4);
+  background: var(--success-bg);
+  border-color: var(--success-border);
   color: var(--lime);
 }
 
@@ -1058,7 +1058,6 @@
 
 .badge__icon {
   font-size: 1.8rem;
-  filter: drop-shadow(0 0 10px rgba(45, 226, 255, 0.5));
 }
 
 .badge__name {
@@ -1203,8 +1202,90 @@
 }
 
 .toast--badge {
-  border-color: rgba(184, 255, 60, 0.5);
+  border-color: var(--success-border);
   box-shadow: var(--glow-lime);
+}
+
+/* ---------------------------------------------------------- */
+/* Menu compte (Profil / Administration / Déconnexion)        */
+/* ---------------------------------------------------------- */
+.account-menu {
+  position: relative;
+}
+
+.account-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 40px;
+  padding: 4px 12px 4px 6px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-pill);
+  background: var(--bg-raised);
+  cursor: pointer;
+  transition: border-color var(--t-fast) var(--ease);
+}
+
+.account-menu__trigger:hover {
+  border-color: var(--stroke-strong);
+}
+
+.account-menu__name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.account-menu__caret {
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--t-300);
+  border-bottom: 1.5px solid var(--t-300);
+  transform: rotate(45deg) translateY(-1px);
+}
+
+.account-menu__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  display: grid;
+  min-width: 200px;
+  padding: var(--s-2);
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--r-md);
+  background: var(--bg-raised);
+  box-shadow: var(--shadow-panel);
+}
+
+.account-menu__panel button {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--t-100);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.account-menu__panel button:hover {
+  background: rgba(201, 168, 92, 0.1);
+  color: var(--cyan);
+}
+
+.account-menu__logout {
+  border-top: 1px solid var(--stroke);
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+}
+
+.account-menu__panel .account-menu__logout:hover {
+  background: rgba(217, 108, 108, 0.1);
+  color: var(--danger);
 }
 
 .toast__icon {

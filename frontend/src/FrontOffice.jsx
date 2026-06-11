@@ -273,7 +273,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
               className={selectedCategory === ALL_CATEGORIES ? 'category-tile category-tile--active' : 'category-tile'}
               onClick={() => setSelectedCategory(ALL_CATEGORIES)}
             >
-              <span className="category-swatch" style={{ backgroundColor: '#7c6cff', color: '#7c6cff' }} />
+              <span className="category-swatch" style={{ backgroundColor: '#c9a85c', color: '#c9a85c' }} />
               <strong>Toutes les catégories</strong>
               <span>{stats.questionCount} questions</span>
             </button>

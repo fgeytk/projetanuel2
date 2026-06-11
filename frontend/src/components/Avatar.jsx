@@ -1,11 +1,11 @@
-// Deterministic neon avatar from a seed string — no external dependency.
+// Avatar déterministe à partir d'un seed — palette feutrée, aucune dépendance.
 const GRADIENTS = [
-  ['#2de2ff', '#845eff'],
-  ['#ff3cac', '#845eff'],
-  ['#b8ff3c', '#2de2ff'],
-  ['#ffb73c', '#ff3cac'],
-  ['#5ad7ff', '#ff6ad5'],
-  ['#845eff', '#2de2ff'],
+  ['#8a7a5c', '#c9a85c'],
+  ['#5c6b7a', '#8d9db1'],
+  ['#6b7a5c', '#9db884'],
+  ['#7a5c50', '#c2795a'],
+  ['#5c7a74', '#86a89f'],
+  ['#7a6e5c', '#b9b0a0'],
 ]
 
 function hashSeed(seed) {

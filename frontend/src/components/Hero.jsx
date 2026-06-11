@@ -21,7 +21,7 @@ export default function Hero({ stats, user, onPlay, onOpenAuth }) {
 
         <div className="hero__cta">
           <button type="button" className="button button--primary" onClick={onPlay}>
-            ▶ Jouer maintenant
+            Jouer maintenant
           </button>
           {!user && (
             <button type="button" className="button" onClick={onOpenAuth}>

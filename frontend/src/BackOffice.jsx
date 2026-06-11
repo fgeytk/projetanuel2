@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  checkAdminSession,
   createCategory,
   createQuestion,
   deleteCategory,
@@ -8,12 +7,11 @@ import {
   fetchAdminCategories,
   fetchAdminQuestions,
   importAdminQuestions,
-  loginAdmin,
-  logoutAdmin,
   resetAdminQuestions,
   updateCategory,
   updateQuestion,
 } from './lib/api.js'
+import { useAuth } from './lib/AuthContext.jsx'
 
 const emptyForm = {
   category: '',
@@ -71,55 +69,6 @@ function toFormQuestion(question) {
   }
 }
 
-function LoginForm({ onSuccess }) {
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  async function handleSubmit(event) {
-    event.preventDefault()
-    setLoading(true)
-    setError('')
-
-    try {
-      await loginAdmin(password)
-      onSuccess()
-    } catch (err) {
-      setError(err.message || 'Connexion impossible')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <main className="page-grid">
-      <section className="admin-login">
-        <p className="eyebrow">Administration</p>
-        <h2>Acces back-office</h2>
-
-        <form onSubmit={handleSubmit} className="stack-form">
-          <label className="form-field">
-            Mot de passe
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              required
-            />
-          </label>
-
-          {error && <p className="form-error">{error}</p>}
-
-          <button type="submit" className="button button--primary" disabled={loading}>
-            {loading ? 'Connexion...' : 'Se connecter'}
-          </button>
-        </form>
-      </section>
-    </main>
-  )
-}
-
 function TextField({ label, value, onChange, type = 'text' }) {
   return (
     <label className="form-field">
@@ -130,9 +79,10 @@ function TextField({ label, value, onChange, type = 'text' }) {
 }
 
 export default function BackOffice({ categories, onDataChange }) {
+  const { user, ready } = useAuth()
+  const isAdmin = user?.role === 'admin'
+
   const fileInputRef = useRef(null)
-  const [authenticated, setAuthenticated] = useState(false)
-  const [checkingSession, setCheckingSession] = useState(true)
   const [questions, setQuestions] = useState([])
   const [adminCategories, setAdminCategories] = useState([])
   const [newCategoryName, setNewCategoryName] = useState('')
@@ -169,9 +119,7 @@ export default function BackOffice({ categories, onDataChange }) {
     try {
       const data = await fetchAdminQuestions()
       setQuestions(data)
-      setAuthenticated(true)
     } catch (err) {
-      setAuthenticated(false)
       setMessage(err.message || 'Impossible de charger les questions')
     } finally {
       setLoading(false)
@@ -188,42 +136,34 @@ export default function BackOffice({ categories, onDataChange }) {
   }
 
   useEffect(() => {
-    async function verifySession() {
-      setCheckingSession(true)
-
-      try {
-        await checkAdminSession()
-        setAuthenticated(true)
-      } catch {
-        setAuthenticated(false)
-      } finally {
-        setCheckingSession(false)
-      }
-    }
-
-    verifySession()
-  }, [])
-
-  useEffect(() => {
-    if (authenticated) {
+    if (isAdmin) {
       loadQuestions()
       loadCategories()
     }
-  }, [authenticated])
+  }, [isAdmin])
 
-  if (checkingSession) {
+  // Défense en profondeur : le serveur refuse déjà (401/403), l'UI n'affiche rien sans rôle admin.
+  if (!ready) {
     return (
       <main className="page-grid">
         <section className="admin-login">
           <p className="eyebrow">Administration</p>
-          <h2>Verification de la session...</h2>
+          <h2>Vérification de la session...</h2>
         </section>
       </main>
     )
   }
 
-  if (!authenticated) {
-    return <LoginForm onSuccess={() => setAuthenticated(true)} />
+  if (!isAdmin) {
+    return (
+      <main className="page-grid">
+        <section className="admin-login">
+          <p className="eyebrow">Administration</p>
+          <h2>Accès réservé</h2>
+          <p className="result-copy">Cette section est réservée aux comptes administrateurs.</p>
+        </section>
+      </main>
+    )
   }
 
   function updateWrongAnswer(index, value) {
@@ -323,18 +263,6 @@ export default function BackOffice({ categories, onDataChange }) {
     } finally {
       setLoading(false)
     }
-  }
-
-  async function handleLogout() {
-    try {
-      await logoutAdmin()
-    } finally {
-      setQuestions([])
-      setAdminCategories([])
-      setMessage('')
-      resetForm()
-    }
-    setAuthenticated(false)
   }
 
   async function handleCreateCategory(event) {
@@ -466,9 +394,6 @@ export default function BackOffice({ categories, onDataChange }) {
           </button>
           <button type="button" className="button button--danger" onClick={handleResetData} disabled={loading}>
             Reset
-          </button>
-          <button type="button" className="button" onClick={handleLogout}>
-            Deconnexion
           </button>
           <input ref={fileInputRef} type="file" accept="application/json" hidden onChange={importData} />
         </div>

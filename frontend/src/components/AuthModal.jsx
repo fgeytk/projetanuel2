@@ -28,8 +28,8 @@ export default function AuthModal({ initialMode = 'login', onClose, onSuccess })
       setError('Pseudo trop court.')
       return
     }
-    if (mode === 'register' && password.length < 6) {
-      setError('Le mot de passe doit faire au moins 6 caractères.')
+    if (mode === 'register' && password.length < 8) {
+      setError('Le mot de passe doit faire au moins 8 caractères.')
       return
     }
 

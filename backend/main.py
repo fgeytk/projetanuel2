@@ -1,31 +1,78 @@
+import logging
 import os
 import random
 import re
 import unicodedata
+from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Response
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 try:
-    from .auth import clear_admin_session, create_admin_session, hash_password, require_admin_session, verify_admin_password, verify_password
-except ImportError:
-    from auth import clear_admin_session, create_admin_session, hash_password, require_admin_session, verify_admin_password, verify_password
-
-try:
-    from .user_auth import clear_user_session, create_user_session, optional_user_session, public_user, require_user_session
-except ImportError:
-    from user_auth import clear_user_session, create_user_session, optional_user_session, public_user, require_user_session
-
-try:
+    from .auth import hash_password, verify_password
     from .badges import BADGES, BADGES_BY_CODE, evaluate_badges
+    from .database import (
+        get_db,
+        get_user_aggregates,
+        init_db,
+        list_categories,
+        list_questions,
+        list_scores,
+        list_user_attempts,
+        list_user_badges,
+        reset_db,
+        row_to_question,
+        row_to_score,
+        sync_categories,
+    )
+    from .security import (
+        RequestLogMiddleware,
+        SecurityHeadersMiddleware,
+        rate_limit,
+        setup_logging,
+    )
+    from .user_auth import (
+        clear_user_session,
+        create_user_session,
+        optional_user_session,
+        public_user,
+        require_admin,
+        require_user_session,
+    )
 except ImportError:
+    from auth import hash_password, verify_password
     from badges import BADGES, BADGES_BY_CODE, evaluate_badges
-
-try:
-    from .database import get_db, get_user_aggregates, init_db, list_categories, list_questions, list_scores, list_user_attempts, list_user_badges, reset_db, row_to_question, row_to_score, sync_categories
-except ImportError:
-    from database import get_db, get_user_aggregates, init_db, list_categories, list_questions, list_scores, list_user_attempts, list_user_badges, reset_db, row_to_question, row_to_score, sync_categories
+    from database import (
+        get_db,
+        get_user_aggregates,
+        init_db,
+        list_categories,
+        list_questions,
+        list_scores,
+        list_user_attempts,
+        list_user_badges,
+        reset_db,
+        row_to_question,
+        row_to_score,
+        sync_categories,
+    )
+    from security import (
+        RequestLogMiddleware,
+        SecurityHeadersMiddleware,
+        rate_limit,
+        setup_logging,
+    )
+    from user_auth import (
+        clear_user_session,
+        create_user_session,
+        optional_user_session,
+        public_user,
+        require_admin,
+        require_user_session,
+    )
 
 
 CORS_ORIGINS = [
@@ -37,15 +84,13 @@ CORS_ORIGINS = [
     if origin.strip()
 ]
 
-
-class AuthPayload(BaseModel):
-    password: str = Field(..., min_length=1, max_length=256)
+logger = logging.getLogger("quiz.api")
 
 
 class RegisterPayload(BaseModel):
-    pseudo: str = Field(..., min_length=3, max_length=40)
-    password: str = Field(..., min_length=6, max_length=128)
-    email: str | None = Field(None, max_length=160)
+    pseudo: str = Field(..., min_length=3, max_length=40, pattern=r"^[^\s<>\"'`;]+([ _-][^\s<>\"'`;]+)*$")
+    password: str = Field(..., min_length=8, max_length=128)
+    email: str | None = Field(None, max_length=160, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 class LoginPayload(BaseModel):
@@ -92,17 +137,41 @@ class VotePayload(BaseModel):
     approve: bool
 
 
-app = FastAPI(title="Quiz Arena API")
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    setup_logging(os.environ.get("LOG_LEVEL", "INFO"))
+    init_db()
+    logger.info("Quiz Arena API démarrée")
+    yield
 
+
+app = FastAPI(title="Quiz Arena API", docs_url=None, redoc_url=None, lifespan=lifespan)
+
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestLogMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type"],
 )
 
-init_db()
+
+@app.exception_handler(RequestValidationError)
+async def validation_error_handler(_, exc: RequestValidationError):
+    first = exc.errors()[0] if exc.errors() else {}
+    field = ".".join(str(part) for part in first.get("loc", []) if part != "body")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": f"Données invalides ({field or 'corps de requête'})"},
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_error_handler(_, exc: Exception):
+    logger.exception("Erreur interne", exc_info=exc)
+    return JSONResponse(status_code=500, content={"detail": "Erreur interne du serveur"})
 
 
 def validate_question_payload(payload: QuestionPayload) -> QuestionPayload:
@@ -277,7 +346,7 @@ def get_random_question(categorie: str | None = None, exclude: str | None = None
         try:
             excluded_ids = [int(value) for value in exclude.split(",") if value.strip()]
         except ValueError:
-            raise HTTPException(status_code=422, detail="Parametre exclude invalide")
+            raise HTTPException(status_code=422, detail="Parametre exclude invalide") from None
 
     conditions = []
     params = []
@@ -335,7 +404,7 @@ def check_answer(payload: AnswerPayload):
     }
 
 
-@app.post("/api/explanation")
+@app.post("/api/explanation", dependencies=[rate_limit("explanation", 30, 60)])
 def check_explanation(payload: ExplanationPayload, current_user: dict | None = Depends(optional_user_session)):
     player_name = current_user["pseudo"] if current_user else payload.playerName.strip()
 
@@ -433,7 +502,7 @@ def get_public_explanations(limit: int = 24):
     return [row_to_public_explanation(row) for row in rows]
 
 
-@app.post("/api/explanations/{explanation_id}/vote")
+@app.post("/api/explanations/{explanation_id}/vote", dependencies=[rate_limit("vote", 30, 60)])
 def vote_public_explanation(explanation_id: int, payload: VotePayload):
     voter_name = payload.voterName.strip()
 
@@ -510,15 +579,17 @@ def get_progress_by_category():
     ]
 
 
-@app.post("/api/scores", status_code=201)
+@app.post("/api/scores", status_code=201, dependencies=[rate_limit("scores", 20, 60)])
 def create_score(payload: ScorePayload, current_user: dict | None = Depends(optional_user_session)):
     player_name = current_user["pseudo"] if current_user else payload.playerName.strip()
     category = payload.category.strip()
 
     if payload.correctAnswers > payload.totalQuestions:
         raise HTTPException(status_code=422, detail="Le nombre de bonnes reponses est invalide")
-    if payload.score > payload.possibleScore and payload.possibleScore > 0:
+    if payload.possibleScore > 0 and payload.score > payload.possibleScore:
         raise HTTPException(status_code=422, detail="Le score depasse le score possible")
+    if payload.possibleScore == 0 and payload.score > 0:
+        raise HTTPException(status_code=422, detail="Score incoherent")
 
     donation_points = payload.score
 
@@ -567,7 +638,7 @@ def list_badge_catalogue():
     return BADGES
 
 
-@app.post("/api/auth/register", status_code=201)
+@app.post("/api/auth/register", status_code=201, dependencies=[rate_limit("register", 10, 3600)])
 def register_user(payload: RegisterPayload, response: Response):
     pseudo = payload.pseudo.strip()
     email = payload.email.strip() if payload.email else None
@@ -611,7 +682,7 @@ def register_user(payload: RegisterPayload, response: Response):
     return public_user(row)
 
 
-@app.post("/api/auth/login")
+@app.post("/api/auth/login", dependencies=[rate_limit("login", 10, 300)])
 def login_user(payload: LoginPayload, response: Response):
     pseudo = payload.pseudo.strip()
 
@@ -685,39 +756,27 @@ def get_profile(current_user: dict = Depends(require_user_session)):
     }
 
 
-@app.post("/api/admin/auth")
-def authenticate(payload: AuthPayload, response: Response):
-    if not verify_admin_password(payload.password):
-        raise HTTPException(status_code=401, detail="Mot de passe incorrect")
-
-    return create_admin_session(response)
-
-
-@app.get("/api/admin/session")
-def get_admin_session(_: dict = Depends(require_admin_session)):
-    return {"authenticated": True}
-
-
-@app.post("/api/admin/logout")
-def logout_admin(response: Response, _: dict = Depends(clear_admin_session)):
-    return {"authenticated": False}
+# ---------------------------------------------------------------------------
+# Back-office : tous les endpoints exigent une session utilisateur role='admin'.
+# Plus aucun mot de passe admin partagé ni session admin séparée.
+# ---------------------------------------------------------------------------
 
 
 @app.get("/api/admin/questions")
-def admin_list_questions(_: dict = Depends(require_admin_session)):
+def admin_list_questions(_: dict = Depends(require_admin)):
     with get_db() as conn:
         return list_questions(conn)
 
 
 @app.get("/api/admin/categories")
-def admin_list_categories(_: dict = Depends(require_admin_session)):
+def admin_list_categories(_: dict = Depends(require_admin)):
     with get_db() as conn:
         sync_categories(conn)
         return list_categories(conn)
 
 
 @app.post("/api/admin/categories", status_code=201)
-def admin_create_category(payload: CategoryPayload, _: dict = Depends(require_admin_session)):
+def admin_create_category(payload: CategoryPayload, _: dict = Depends(require_admin)):
     name = validate_category_name(payload.name)
 
     with get_db() as conn:
@@ -738,7 +797,7 @@ def admin_create_category(payload: CategoryPayload, _: dict = Depends(require_ad
 def admin_update_category(
     category_id: int,
     payload: CategoryPayload,
-    _: dict = Depends(require_admin_session),
+    _: dict = Depends(require_admin),
 ):
     name = validate_category_name(payload.name)
 
@@ -772,7 +831,7 @@ def admin_update_category(
 
 
 @app.delete("/api/admin/categories/{category_id}", status_code=204)
-def admin_delete_category(category_id: int, _: dict = Depends(require_admin_session)):
+def admin_delete_category(category_id: int, _: dict = Depends(require_admin)):
     with get_db() as conn:
         category = conn.execute("SELECT name FROM category WHERE id = %s", (category_id,)).fetchone()
         if not category:
@@ -791,7 +850,7 @@ def admin_delete_category(category_id: int, _: dict = Depends(require_admin_sess
 
 
 @app.post("/api/admin/questions", status_code=201)
-def admin_create_question(payload: QuestionPayload, _: dict = Depends(require_admin_session)):
+def admin_create_question(payload: QuestionPayload, _: dict = Depends(require_admin)):
     question = validate_question_payload(payload)
 
     with get_db() as conn:
@@ -826,7 +885,7 @@ def admin_create_question(payload: QuestionPayload, _: dict = Depends(require_ad
 def admin_update_question(
     question_id: int,
     payload: QuestionPayload,
-    _: dict = Depends(require_admin_session),
+    _: dict = Depends(require_admin),
 ):
     question = validate_question_payload(payload)
 
@@ -870,7 +929,7 @@ def admin_update_question(
 
 
 @app.delete("/api/admin/questions/{question_id}", status_code=204)
-def admin_delete_question(question_id: int, _: dict = Depends(require_admin_session)):
+def admin_delete_question(question_id: int, _: dict = Depends(require_admin)):
     with get_db() as conn:
         cursor = conn.execute("DELETE FROM question WHERE id = %s", (question_id,))
         if cursor.rowcount == 0:
@@ -880,12 +939,12 @@ def admin_delete_question(question_id: int, _: dict = Depends(require_admin_sess
 
 
 @app.post("/api/admin/reset")
-def admin_reset_questions(_: dict = Depends(require_admin_session)):
+def admin_reset_questions(_: dict = Depends(require_admin)):
     return reset_db()
 
 
 @app.post("/api/admin/import")
-def admin_import_questions(payload: list[QuestionPayload], _: dict = Depends(require_admin_session)):
+def admin_import_questions(payload: list[QuestionPayload], _: dict = Depends(require_admin)):
     questions = [validate_question_payload(question) for question in payload]
     if not questions:
         raise HTTPException(status_code=422, detail="Le fichier ne contient aucune question")

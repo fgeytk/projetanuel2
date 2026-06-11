@@ -13,12 +13,12 @@ function drawCard({ playerName, score, successRate, category, donationPoints }) 
   const ctx = canvas.getContext('2d')
 
   const bg = ctx.createLinearGradient(0, 0, 1200, 630)
-  bg.addColorStop(0, '#0d0b1a')
-  bg.addColorStop(1, '#1c1838')
+  bg.addColorStop(0, '#100f0d')
+  bg.addColorStop(1, '#1d1a17')
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, 1200, 630)
 
-  // glow blobs
+  // halos discrets
   const blob = (x, y, r, color) => {
     const g = ctx.createRadialGradient(x, y, 0, x, y, r)
     g.addColorStop(0, color)
@@ -26,35 +26,35 @@ function drawCard({ playerName, score, successRate, category, donationPoints }) 
     ctx.fillStyle = g
     ctx.fillRect(0, 0, 1200, 630)
   }
-  blob(1000, 80, 360, 'rgba(255,60,172,0.45)')
-  blob(120, 560, 360, 'rgba(45,226,255,0.4)')
+  blob(1000, 80, 360, 'rgba(217,179,106,0.18)')
+  blob(120, 560, 360, 'rgba(141,157,177,0.14)')
 
   ctx.textBaseline = 'top'
-  ctx.fillStyle = '#2de2ff'
+  ctx.fillStyle = '#c9a85c'
   ctx.font = '700 28px Inter, sans-serif'
   ctx.fillText(`${APP_NAME.toUpperCase()} · LE QUIZ ARGUMENTÉ`, 80, 80)
 
-  ctx.fillStyle = '#f2f0ff'
-  ctx.font = '700 64px "Chakra Petch", sans-serif'
+  ctx.fillStyle = '#f2ede2'
+  ctx.font = '600 64px Fraunces, Georgia, serif'
   ctx.fillText(playerName, 80, 140)
 
   const scoreGrad = ctx.createLinearGradient(80, 0, 600, 0)
-  scoreGrad.addColorStop(0, '#2de2ff')
-  scoreGrad.addColorStop(1, '#ff3cac')
+  scoreGrad.addColorStop(0, '#d9b36a')
+  scoreGrad.addColorStop(1, '#c2795a')
   ctx.fillStyle = scoreGrad
-  ctx.font = '700 180px "Chakra Petch", sans-serif'
+  ctx.font = '700 180px Fraunces, Georgia, serif'
   ctx.fillText(`${score}`, 76, 250)
-  ctx.fillStyle = '#b8b2d8'
+  ctx.fillStyle = '#b9b0a0'
   ctx.font = '600 40px Inter, sans-serif'
   ctx.fillText('points', 80, 470)
 
-  ctx.fillStyle = '#f2f0ff'
+  ctx.fillStyle = '#f2ede2'
   ctx.font = '600 34px Inter, sans-serif'
   ctx.textAlign = 'right'
   ctx.fillText(`${successRate}% de réussite`, 1120, 300)
   ctx.fillText(`Catégorie : ${category}`, 1120, 350)
-  ctx.fillStyle = '#b8ff3c'
-  ctx.fillText(`${donationPoints} points solidaires 💖`, 1120, 400)
+  ctx.fillStyle = '#9db884'
+  ctx.fillText(`${donationPoints} points solidaires`, 1120, 400)
   ctx.textAlign = 'left'
 
   return canvas

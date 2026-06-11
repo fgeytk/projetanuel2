@@ -1,8 +1,6 @@
-"""Player account sessions.
+"""Sessions joueurs (cookie HttpOnly, jeton haché en base) + RBAC.
 
-Mirrors backend/auth.py (admin) but for regular players: cookie-based
-HttpOnly sessions stored hashed in `user_session`. Reuses the PBKDF2 password
-helpers and the session-token hashing from auth.py.
+`require_admin` est LA porte d'entrée du back-office : session valide ET role='admin'.
 """
 
 import os
@@ -100,6 +98,18 @@ def require_user_session(
     row = _load_session_user(user_session)
     if not row:
         raise HTTPException(status_code=401, detail="Connecte-toi pour accéder à cette page")
+    return public_user(row)
+
+
+def require_admin(
+    user_session: Annotated[str | None, Cookie(alias=USER_SESSION_COOKIE_NAME)] = None,
+):
+    """RBAC serveur : 401 sans session, 403 si la session n'est pas admin."""
+    row = _load_session_user(user_session)
+    if not row:
+        raise HTTPException(status_code=401, detail="Connexion requise")
+    if row.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
     return public_user(row)
 
 

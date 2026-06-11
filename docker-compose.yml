@@ -22,14 +22,25 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-quiz}:${POSTGRES_PASSWORD:-quiz}@db:5432/${POSTGRES_DB:-quiz}
       QUIZ_SEED_PATH: /app/backend/data/questions.seed.json
-      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-pbkdf2_sha256:600000:4Sz6cM7SuVLbOQjveo8rPQ:V3mC70yXAN800Ok5WEmO6ozVH04W7kJK8N4UQLfwpjU}
-      ADMIN_SESSION_TTL_SECONDS: ${ADMIN_SESSION_TTL_SECONDS:-28800}
+      # Bootstrap du compte admin (aucun secret en dur : tout vient de .env)
+      ADMIN_PSEUDO: ${ADMIN_PSEUDO:-}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      USER_SESSION_TTL_SECONDS: ${USER_SESSION_TTL_SECONDS:-2592000}
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      SESSION_COOKIE_SAMESITE: ${SESSION_COOKIE_SAMESITE:-lax}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app/backend
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      start_period: 20s
+      retries: 10
     depends_on:
       db:
         condition: service_healthy
@@ -45,12 +56,13 @@ services:
       - ./frontend:/app
       - frontend-node-modules:/app/node_modules
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
   adminer:
     image: adminer:4
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       - db
 

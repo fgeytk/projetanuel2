@@ -1,52 +1,60 @@
 /* ============================================================
-   Quiz Arena — Design tokens (theme "Arcade Neon")
-   Single source of truth for colors, spacing, radius, motion.
+   Quiz Arena — Design tokens (thème "Atelier nocturne")
+   Encre chaude, ivoire, laiton. Une seule source de vérité.
+   Les noms historiques (--cyan, --magenta…) sont conservés comme
+   alias sémantiques : accent / secondaire / neutre / succès.
    ============================================================ */
 
 :root {
-  /* --- Background layers (deep indigo -> near black) --- */
-  --bg-900: #07060f;
-  --bg-800: #0d0b1a;
-  --bg-700: #14122a;
-  --bg-600: #1c1838;
-  --bg-panel: rgba(20, 18, 42, 0.72);
-  --bg-raised: rgba(28, 24, 56, 0.85);
+  /* --- Fonds (encre chaude, du plus profond au plus clair) --- */
+  --bg-900: #100f0d;
+  --bg-800: #161412;
+  --bg-700: #1d1a17;
+  --bg-600: #262219;
+  --bg-panel: rgba(24, 22, 19, 0.92);
+  --bg-raised: rgba(34, 30, 25, 0.95);
 
-  /* --- Strokes --- */
-  --stroke: rgba(124, 108, 255, 0.18);
-  --stroke-strong: rgba(124, 108, 255, 0.36);
+  /* --- Filets --- */
+  --stroke: rgba(228, 217, 196, 0.1);
+  --stroke-strong: rgba(228, 217, 196, 0.22);
 
-  /* --- Neon accents --- */
-  --cyan: #2de2ff;
-  --magenta: #ff3cac;
-  --violet: #845eff;
-  --lime: #b8ff3c;
-  --amber: #ffb73c;
-  --danger: #ff4d6d;
+  /* --- Accents (alias historiques) --- */
+  --cyan: #c9a85c;     /* accent principal : laiton */
+  --magenta: #c2795a;  /* secondaire : terre cuite */
+  --violet: #8d9db1;   /* neutre froid : ardoise */
+  --lime: #9db884;     /* succès : sauge */
+  --amber: #d9b36a;
+  --danger: #d96c6c;
 
-  --brand: linear-gradient(135deg, var(--cyan), var(--magenta));
-  --brand-violet: linear-gradient(135deg, var(--violet), var(--magenta));
+  --success-border: rgba(157, 184, 132, 0.38);
+  --success-bg: rgba(157, 184, 132, 0.08);
+  --success-strong: #c3d6ad;
 
-  /* --- Text --- */
-  --t-100: #f2f0ff;
-  --t-300: #b8b2d8;
-  --t-500: #7d76a8;
+  --brand: linear-gradient(135deg, #d9b36a, #c2795a);
+  --brand-violet: linear-gradient(135deg, #8d9db1, #c2795a);
 
-  /* --- Glows & shadows --- */
-  --glow-cyan: 0 0 24px rgba(45, 226, 255, 0.45);
-  --glow-magenta: 0 0 24px rgba(255, 60, 172, 0.45);
-  --glow-violet: 0 0 24px rgba(132, 94, 255, 0.45);
-  --glow-lime: 0 0 22px rgba(184, 255, 60, 0.4);
-  --shadow-panel: 0 20px 60px rgba(0, 0, 0, 0.55);
-  --shadow-soft: 0 12px 32px rgba(0, 0, 0, 0.4);
+  /* --- Texte --- */
+  --t-100: #f2ede2;
+  --t-300: #b9b0a0;
+  --t-500: #8d8578;
 
-  /* --- Radius --- */
-  --r-sm: 8px;
-  --r-md: 14px;
-  --r-lg: 22px;
+  /* --- Ombres (plus de glow néon : profondeur douce) --- */
+  --glow-cyan: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --glow-magenta: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --glow-violet: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --glow-lime: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-panel: 0 16px 44px rgba(0, 0, 0, 0.45);
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.32);
+
+  --focus-ring: 0 0 0 3px rgba(201, 168, 92, 0.28);
+
+  /* --- Rayons (plus serrés, moins "app template") --- */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
   --r-pill: 999px;
 
-  /* --- Spacing scale --- */
+  /* --- Échelle d'espacement --- */
   --s-1: 4px;
   --s-2: 8px;
   --s-3: 12px;
@@ -56,13 +64,13 @@
   --s-7: 48px;
   --s-8: 64px;
 
-  /* --- Motion --- */
+  /* --- Mouvement --- */
   --t-fast: 120ms;
   --t-base: 220ms;
   --t-slow: 420ms;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-  /* --- Typography --- */
-  --font-display: "Chakra Petch", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* --- Typographie : serif éditoriale + sans humaniste --- */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }

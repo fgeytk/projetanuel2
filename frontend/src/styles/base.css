@@ -1,5 +1,5 @@
 /* ============================================================
-   Quiz Arena — Base layer (reset, typography, form elements)
+   Quiz Arena — Base layer (reset, typographie, formulaires)
    ============================================================ */
 
 * {
@@ -20,26 +20,10 @@ body {
   -webkit-font-smoothing: antialiased;
   background-color: var(--bg-900);
   background-image:
-    radial-gradient(1200px 600px at 12% -10%, rgba(132, 94, 255, 0.22), transparent 60%),
-    radial-gradient(1000px 560px at 100% 0%, rgba(255, 60, 172, 0.16), transparent 55%),
-    radial-gradient(900px 700px at 50% 120%, rgba(45, 226, 255, 0.12), transparent 60%),
+    radial-gradient(1100px 540px at 18% -12%, rgba(217, 179, 106, 0.06), transparent 60%),
+    radial-gradient(900px 600px at 100% 110%, rgba(141, 157, 177, 0.05), transparent 55%),
     linear-gradient(180deg, var(--bg-900), var(--bg-800));
   background-attachment: fixed;
-}
-
-/* Faint arcade grid overlay */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.4;
-  background-image:
-    linear-gradient(rgba(124, 108, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124, 108, 255, 0.05) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
 }
 
 #root {
@@ -59,28 +43,32 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: 0.005em;
 }
 
 h1 {
-  font-size: clamp(2.1rem, 4.4vw, 3.6rem);
-  line-height: 1.02;
+  font-size: clamp(2.1rem, 4.2vw, 3.4rem);
+  line-height: 1.06;
 }
 
 h2 {
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
-  line-height: 1.08;
+  font-size: clamp(1.5rem, 2.8vw, 2.2rem);
+  line-height: 1.12;
 }
 
 h3 {
-  font-size: 1.2rem;
-  line-height: 1.2;
+  font-size: 1.18rem;
+  line-height: 1.25;
 }
 
 a {
   color: var(--cyan);
   text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 button,
@@ -95,7 +83,7 @@ button {
   touch-action: manipulation;
 }
 
-/* --- Form controls (dark) --- */
+/* --- Champs de formulaire --- */
 input,
 select,
 textarea {
@@ -104,9 +92,9 @@ textarea {
   padding: 11px 14px;
   border: 1px solid var(--stroke);
   border-radius: var(--r-sm);
-  background: rgba(7, 6, 15, 0.55);
+  background: rgba(16, 15, 13, 0.6);
   color: var(--t-100);
-  font-weight: 600;
+  font-weight: 500;
   transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
 }
 
@@ -137,22 +125,40 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--cyan);
-  box-shadow: 0 0 0 3px rgba(45, 226, 255, 0.18), var(--glow-cyan);
+  box-shadow: var(--focus-ring);
 }
 
-/* Visible focus ring for keyboard users on interactive elements */
+/* Anneau de focus visible pour la navigation clavier (WCAG 2.4.7) */
 :focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 2px;
 }
 
-/* --- Shared utilities --- */
+/* Lien d'évitement (WCAG 2.4.1) */
+.skip-link {
+  position: absolute;
+  top: -48px;
+  left: var(--s-4);
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--r-sm);
+  background: var(--cyan);
+  color: #16130c;
+  font-weight: 700;
+  transition: top var(--t-fast) var(--ease);
+}
+
+.skip-link:focus {
+  top: var(--s-3);
+  text-decoration: none;
+}
+
+/* --- Utilitaires partagés --- */
 .panel {
   border: 1px solid var(--stroke);
   border-radius: var(--r-lg);
   background: var(--bg-panel);
   box-shadow: var(--shadow-panel);
-  backdrop-filter: blur(16px);
 }
 
 .glow-text {
@@ -170,15 +176,15 @@ textarea:focus {
   padding: 0 12px;
   border: 1px solid var(--stroke-strong);
   border-radius: var(--r-pill);
-  background: rgba(124, 108, 255, 0.12);
+  background: rgba(201, 168, 92, 0.08);
   color: var(--t-300);
   font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-/* --- Reduced motion --- */
+/* --- Mouvement réduit --- */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

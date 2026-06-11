@@ -114,23 +114,8 @@ export async function fetchBadgeCatalogue() {
   return apiFetch('/badges')
 }
 
-export async function loginAdmin(password) {
-  return apiFetch('/admin/auth', {
-    method: 'POST',
-    body: JSON.stringify({ password }),
-  })
-}
-
-export async function checkAdminSession() {
-  return apiFetch('/admin/session')
-}
-
-export async function logoutAdmin() {
-  return apiFetch('/admin/logout', {
-    method: 'POST',
-  })
-}
-
+// L'admin s'authentifie comme n'importe quel utilisateur : le serveur
+// vérifie role='admin' sur chaque endpoint /admin/* (401/403 sinon).
 export async function fetchAdminQuestions() {
   return apiFetch('/admin/questions')
 }
