@@ -406,17 +406,10 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
             </form>
 
             {result && (
-              <div className={result.correct ? 'feedback feedback--success' : 'feedback feedback--error'}>
-                <strong>{result.correct ? 'Ça décolle ! 😄' : 'Bide… retravaille ta vanne'}</strong>
-                <span>
-                  {result.correct
-                    ? `+${result.points} points provisoires, le jury du public tranche`
-                    : 'Pas assez drôle pour le public, retente ta chance !'}
-                </span>
-                <small>Vanne envoyée #{result.explanationId}. Le public vote dans l'onglet Le jury.</small>
-                {result.matchedKeywords?.length > 0 && (
-                  <small>Mots qui ont fait mouche : {result.matchedKeywords.join(', ')}</small>
-                )}
+              <div className="feedback feedback--success">
+                <strong>Vanne envoyée ! 🎤</strong>
+                <span>C'est au public de juger maintenant.</span>
+                <small>Vanne #{result.explanationId} en lice. Retrouve les votes dans l'onglet Le jury.</small>
               </div>
             )}
           </>
