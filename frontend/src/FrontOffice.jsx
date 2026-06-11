@@ -69,7 +69,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
 
     const cleanName = playerName.trim()
     if (cleanName.length < 2) {
-      setError('Le pseudo doit contenir au moins 2 caracteres.')
+      setError('Ton nom de scène doit contenir au moins 2 caractères.')
       return
     }
 
@@ -92,7 +92,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
     const { done } = await loadQuestion(selectedCategory, [])
     if (done) {
       setSession(null)
-      setError('Aucune question disponible pour cette selection.')
+      setError('Aucune question dispo pour ce thème. Choisis-en un autre !')
     }
   }
 
@@ -137,7 +137,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
       }
       await onScoreSaved()
     } catch (err) {
-      setError(err.message || 'Score non enregistre')
+      setError(err.message || 'Score non enregistré')
     } finally {
       setSavingScore(false)
     }
@@ -151,7 +151,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
     }
 
     if (explanation.trim().length < 8) {
-      setError('Explique ta reponse avec une phrase un peu plus complete.')
+      setError('Une vanne un peu plus développée, le public a faim !')
       return
     }
 
@@ -172,7 +172,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
       setResult(answerResult)
       setSession(nextSession)
     } catch (err) {
-      setError(err.message || "Impossible de verifier l'explication")
+      setError(err.message || "Impossible d'envoyer ta vanne")
     } finally {
       setLoading(false)
     }
@@ -199,19 +199,19 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
       <main className="play-layout">
         <section className="start-panel">
           <div className="section-heading">
-            <p className="eyebrow">Nouvelle partie</p>
-            <h2>Défends une réponse</h2>
+            <p className="eyebrow">Nouveau passage sur scène</p>
+            <h2>Monte sur scène</h2>
           </div>
 
           <form className="start-form" onSubmit={startSession}>
             {user ? (
               <div className="form-field">
-                Joueur
-                <div className="form-message">Connecté en tant que {user.pseudo}</div>
+                Humoriste
+                <div className="form-message">En scène : {user.pseudo}</div>
               </div>
             ) : (
               <label className="form-field">
-                Pseudo
+                Nom de scène
                 <input
                   value={playerName}
                   onChange={(event) => setPlayerName(event.target.value)}
@@ -223,7 +223,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
             )}
 
             <label className="form-field">
-              Catégorie
+              Thème
               <select
                 value={selectedCategory}
                 onChange={(event) => {
@@ -231,7 +231,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
                   setError('')
                 }}
               >
-                <option value={ALL_CATEGORIES}>Toutes les catégories</option>
+                <option value={ALL_CATEGORIES}>Tous les thèmes</option>
                 {categoryCards.map((category) => (
                   <option key={category.name} value={category.name}>
                     {category.name}
@@ -254,7 +254,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
             </div>
 
             <button type="submit" className="button button--primary" disabled={loading || availableQuestions === 0}>
-              {loading ? 'Préparation...' : 'Lancer la partie'}
+              {loading ? 'Trois coups...' : 'Lever de rideau'}
             </button>
 
             {error && <p className="form-error">{error}</p>}
@@ -263,8 +263,8 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
 
         <section className="category-panel">
           <div className="section-heading">
-            <p className="eyebrow">Catégories</p>
-            <h2>Choix rapide</h2>
+            <p className="eyebrow">Thèmes</p>
+            <h2>Choisis ton terrain de jeu</h2>
           </div>
 
           <div className="category-grid">
@@ -274,7 +274,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
               onClick={() => setSelectedCategory(ALL_CATEGORIES)}
             >
               <span className="category-swatch" style={{ backgroundColor: '#c9a85c', color: '#c9a85c' }} />
-              <strong>Toutes les catégories</strong>
+              <strong>Tous les thèmes</strong>
               <span>{stats.questionCount} questions</span>
             </button>
 
@@ -313,42 +313,42 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
       <main className="page-grid">
         <section className="result-panel">
           <div>
-            <p className="eyebrow">Partie terminée</p>
+            <p className="eyebrow">Rideau ! 🎭</p>
             <h2>{session.score} points</h2>
           </div>
 
           <div className="result-grid">
             <div>
               <strong>{session.playerName}</strong>
-              <span>joueur</span>
+              <span>humoriste</span>
             </div>
             <div>
               <strong>{session.correctAnswers}/{session.answered}</strong>
-              <span>validations auto</span>
+              <span>vannes qui passent</span>
             </div>
             <div>
               <strong>{successRate}%</strong>
-              <span>réussite</span>
+              <span>taux de rire</span>
             </div>
             <div>
               <strong>{categoryLabel(session.category)}</strong>
-              <span>catégorie</span>
+              <span>thème</span>
             </div>
             <div>
               <strong>{session.score}</strong>
-              <span>points solidaires</span>
+              <span>points de rire</span>
             </div>
           </div>
 
-          {savingScore && <p className="form-message">Enregistrement du score...</p>}
-          {savedScore && <p className="form-message">Score enregistré. Tes explications sont ouvertes au vote public.</p>}
+          {savingScore && <p className="form-message">On note ton score...</p>}
+          {savedScore && <p className="form-message">Score enregistré. Tes vannes passent devant le jury du public !</p>}
           {error && <p className="form-error">{error}</p>}
 
           <ShareCard result={shareData} />
 
           <div className="button-row">
             <button type="button" className="button button--primary" onClick={resetToStart}>
-              Rejouer
+              Remonter sur scène
             </button>
             <button type="button" className="button" onClick={onOpenLeaderboard}>
               Voir le classement
@@ -387,17 +387,17 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
             </div>
 
             <div className="answer-reveal">
-              <span>Réponse à défendre</span>
+              <span>La réponse à mettre en boîte</span>
               <strong>{currentQuestion.correctAnswer}</strong>
             </div>
 
             <form className="explanation-form" onSubmit={handleExplanationSubmit}>
               <label className="form-field">
-                Ton explication
+                Ta vanne
                 <textarea
                   value={explanation}
                   onChange={(event) => setExplanation(event.target.value)}
-                  placeholder="Explique pourquoi cette réponse est correcte..."
+                  placeholder="Balance la version la plus drôle de cette réponse..."
                   disabled={Boolean(result) || loading}
                   required
                 />
@@ -405,22 +405,22 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
 
               {!result && (
                 <button type="submit" className="button button--primary" disabled={loading}>
-                  {loading ? 'Validation...' : "Valider l'explication"}
+                  {loading ? 'Roulement de tambour...' : 'Balancer la vanne'}
                 </button>
               )}
             </form>
 
             {result && (
               <div className={result.correct ? 'feedback feedback--success' : 'feedback feedback--error'}>
-                <strong>{result.correct ? 'Explication validée' : 'Explication insuffisante'}</strong>
+                <strong>{result.correct ? 'Ça décolle ! 😄' : 'Bide… retravaille ta vanne'}</strong>
                 <span>
                   {result.correct
-                    ? `+${result.points} points provisoires, soumis au vote public`
+                    ? `+${result.points} points provisoires, le jury du public tranche`
                     : result.expectedExplanation}
                 </span>
-                <small>Explication publiée #{result.explanationId}. La communauté peut voter dans l'onglet Votes.</small>
+                <small>Vanne envoyée #{result.explanationId}. Le public vote dans l'onglet Le jury.</small>
                 {result.matchedKeywords?.length > 0 && (
-                  <small>Mots-clés reconnus : {result.matchedKeywords.join(', ')}</small>
+                  <small>Mots qui ont fait mouche : {result.matchedKeywords.join(', ')}</small>
                 )}
               </div>
             )}
@@ -428,7 +428,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
         ) : (
           <>
             <p className="eyebrow">Chargement</p>
-            <h2>Question en cours de chargement...</h2>
+            <h2>La prochaine question arrive en coulisses...</h2>
           </>
         )}
 
@@ -436,7 +436,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
 
         <div className="button-row button-row--split">
           <button type="button" className="button" onClick={resetToStart}>
-            Quitter
+            Quitter la scène
           </button>
           {result && (
             <button type="button" className="button button--primary" disabled={loading} onClick={goNext}>

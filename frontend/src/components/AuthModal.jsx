@@ -54,7 +54,7 @@ export default function AuthModal({ initialMode = 'login', onClose, onSuccess })
         <div className="modal__head">
           <div>
             <p className="eyebrow">Quiz Arena</p>
-            <h2>{mode === 'register' ? 'Crée ton compte' : 'Connexion'}</h2>
+            <h2>{mode === 'register' ? 'Rejoins la troupe' : 'Connexion'}</h2>
           </div>
           <button type="button" className="modal__close" onClick={onClose} aria-label="Fermer">
             ✕
@@ -72,7 +72,7 @@ export default function AuthModal({ initialMode = 'login', onClose, onSuccess })
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="form-field">
-            Pseudo
+            Nom de scène
             <input
               value={pseudo}
               onChange={(event) => setPseudo(event.target.value)}

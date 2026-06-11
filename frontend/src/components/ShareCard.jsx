@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { APP_NAME } from '../lib/constants.js'
 
 function buildShareText({ playerName, score, successRate, category }) {
-  return `🎮 ${playerName} vient de marquer ${score} points sur ${APP_NAME} (${successRate}% de réussite, catégorie ${category}) ! À toi de défendre tes réponses.`
+  return `🎤 ${playerName} vient de décrocher ${score} points sur ${APP_NAME} (${successRate}% de rires, thème ${category}) ! À toi de sortir une vanne plus drôle.`
 }
 
 // Draws the result as a 1200x630 PNG using a plain canvas (no dependency).
@@ -32,7 +32,7 @@ function drawCard({ playerName, score, successRate, category, donationPoints }) 
   ctx.textBaseline = 'top'
   ctx.fillStyle = '#c9a85c'
   ctx.font = '700 28px Inter, sans-serif'
-  ctx.fillText(`${APP_NAME.toUpperCase()} · LE QUIZ ARGUMENTÉ`, 80, 80)
+  ctx.fillText(`${APP_NAME.toUpperCase()} · LE CONCOURS DE VANNES`, 80, 80)
 
   ctx.fillStyle = '#f2ede2'
   ctx.font = '600 64px Fraunces, Georgia, serif'
@@ -51,10 +51,10 @@ function drawCard({ playerName, score, successRate, category, donationPoints }) 
   ctx.fillStyle = '#f2ede2'
   ctx.font = '600 34px Inter, sans-serif'
   ctx.textAlign = 'right'
-  ctx.fillText(`${successRate}% de réussite`, 1120, 300)
-  ctx.fillText(`Catégorie : ${category}`, 1120, 350)
+  ctx.fillText(`${successRate}% de rires`, 1120, 300)
+  ctx.fillText(`Thème : ${category}`, 1120, 350)
   ctx.fillStyle = '#9db884'
-  ctx.fillText(`${donationPoints} points solidaires`, 1120, 400)
+  ctx.fillText(`${donationPoints} points de rire`, 1120, 400)
   ctx.textAlign = 'left'
 
   return canvas
@@ -72,7 +72,7 @@ export default function ShareCard({ result }) {
         return
       }
       await navigator.clipboard.writeText(`${shareText} ${window.location.href}`)
-      setMessage('Résumé copié dans le presse-papier !')
+      setMessage('Vanne copiée dans le presse-papier !')
     } catch {
       setMessage('Partage annulé.')
     }
@@ -93,10 +93,10 @@ export default function ShareCard({ result }) {
 
   return (
     <div className="share-card">
-      <p className="eyebrow">Partage ton score</p>
+      <p className="eyebrow">Frime avec ton score</p>
       <span className="share-card__score">{result.score} pts</span>
       <p className="result-copy">
-        {result.playerName} · {result.successRate}% de réussite · {result.category}
+        {result.playerName} · {result.successRate}% de rires · {result.category}
       </p>
       <div className="share-actions">
         <button type="button" className="button button--primary" onClick={handleShare}>

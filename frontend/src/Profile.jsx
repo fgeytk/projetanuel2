@@ -42,12 +42,12 @@ export default function Profile({ onPlay, onOpenAuth }) {
       <main className="page-grid">
         <section className="profile-panel">
           <div className="section-heading">
-            <p className="eyebrow">Profil</p>
-            <h2>Connecte-toi pour suivre ta progression</h2>
+            <p className="eyebrow">Loge</p>
+            <h2>Connecte-toi pour suivre ta carrière d'humoriste</h2>
           </div>
           <p className="result-copy">
-            Crée un compte pour débloquer tes badges, garder ton historique de parties et réserver
-            ton pseudo au classement.
+            Crée un compte pour décrocher tes badges, garder l'historique de tes passages et réserver
+            ton nom de scène au classement.
           </p>
           <div className="button-row">
             <button type="button" className="button button--primary" onClick={onOpenAuth}>
@@ -88,7 +88,7 @@ export default function Profile({ onPlay, onOpenAuth }) {
         <div className="profile-header">
           <Avatar seed={user.avatarSeed || user.pseudo} size="lg" />
           <div className="profile-id">
-            <p className="eyebrow">Profil joueur</p>
+            <p className="eyebrow">Fiche d'humoriste</p>
             <h2>{user.pseudo}</h2>
             <span className="chip">{unlockedCount} badge{unlockedCount > 1 ? 's' : ''} débloqué{unlockedCount > 1 ? 's' : ''}</span>
           </div>
@@ -97,7 +97,7 @@ export default function Profile({ onPlay, onOpenAuth }) {
         <div className="profile-stats">
           <div className="stat-tile">
             <strong>{stats.games}</strong>
-            <span>parties jouées</span>
+            <span>passages sur scène</span>
           </div>
           <div className="stat-tile">
             <strong>{stats.bestScore}</strong>
@@ -105,18 +105,18 @@ export default function Profile({ onPlay, onOpenAuth }) {
           </div>
           <div className="stat-tile">
             <strong>{stats.donationPoints}</strong>
-            <span>points solidaires</span>
+            <span>points de rire</span>
           </div>
           <div className="stat-tile">
             <strong>{stats.acceptedExplanations}</strong>
-            <span>explications validées</span>
+            <span>vannes qui ont cartonné</span>
           </div>
         </div>
 
         {stats.games === 0 && (
           <div className="button-row">
             <button type="button" className="button button--primary" onClick={onPlay}>
-              Lancer ma première partie
+              Faire mon premier passage
             </button>
           </div>
         )}
@@ -133,10 +133,10 @@ export default function Profile({ onPlay, onOpenAuth }) {
       <section className="profile-panel">
         <div className="section-heading">
           <p className="eyebrow">Progression</p>
-          <h2>Par catégorie</h2>
+          <h2>Par thème</h2>
         </div>
         {progress.length === 0 ? (
-          <p className="empty-state">Joue quelques parties pour voir ta progression.</p>
+          <p className="empty-state">Fais quelques passages pour voir ta progression.</p>
         ) : (
           <div className="progress-list">
             {progress.map((item) => {
@@ -145,7 +145,7 @@ export default function Profile({ onPlay, onOpenAuth }) {
                 <div className="progress-row" key={item.category}>
                   <div>
                     <strong>{item.category}</strong>
-                    <span>{item.games} partie{item.games > 1 ? 's' : ''}</span>
+                    <span>{item.games} passage{item.games > 1 ? 's' : ''}</span>
                   </div>
                   <div className="progress-bar">
                     <span style={{ width: `${width}%` }} />
@@ -156,7 +156,7 @@ export default function Profile({ onPlay, onOpenAuth }) {
                   </div>
                   <div>
                     <strong>{item.donationPoints}</strong>
-                    <span>solidaires</span>
+                    <span>de rire</span>
                   </div>
                 </div>
               )
@@ -168,17 +168,17 @@ export default function Profile({ onPlay, onOpenAuth }) {
       <section className="profile-panel">
         <div className="section-heading">
           <p className="eyebrow">Historique</p>
-          <h2>Dernières parties</h2>
+          <h2>Tes derniers passages</h2>
         </div>
         {attempts.length === 0 ? (
-          <p className="empty-state">Aucune partie pour le moment.</p>
+          <p className="empty-state">Aucun passage pour le moment.</p>
         ) : (
           <div className="history-list">
             {attempts.map((attempt) => (
               <div className="history-row" key={attempt.id}>
                 <div>
                   <strong>{attempt.category}</strong>
-                  <span>{attempt.correctAnswers}/{attempt.totalQuestions} validations</span>
+                  <span>{attempt.correctAnswers}/{attempt.totalQuestions} vannes qui passent</span>
                 </div>
                 <strong>{attempt.score} pts</strong>
                 <span>{formatDate(attempt.createdAt)}</span>

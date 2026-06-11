@@ -27,7 +27,7 @@ export default function Leaderboard() {
       setScores(data)
       setProgress(progressData)
     } catch (err) {
-      setError(err.message || 'Classement indisponible')
+      setError(err.message || 'Palmarès indisponible')
     } finally {
       setLoading(false)
     }
@@ -42,8 +42,8 @@ export default function Leaderboard() {
       <section className="leaderboard-panel">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Competition</p>
-            <h2>Classement des joueurs</h2>
+            <p className="eyebrow">Affiche du moment 🏆</p>
+            <h2>Les rois de la vanne</h2>
           </div>
           <button type="button" className="button" onClick={loadScores} disabled={loading}>
             Actualiser
@@ -53,9 +53,9 @@ export default function Leaderboard() {
         {error && <p className="form-error">{error}</p>}
 
         {loading ? (
-          <p className="empty-state">Chargement du classement...</p>
+          <p className="empty-state">On compte les rires...</p>
         ) : scores.length === 0 ? (
-          <p className="empty-state">Aucune partie enregistree pour le moment.</p>
+          <p className="empty-state">Personne n'est encore monté sur scène. À toi de l'ouvrir !</p>
         ) : (
           <div className="leaderboard-list">
             {scores.map((score, index) => (
@@ -71,9 +71,9 @@ export default function Leaderboard() {
                 <div className="leaderboard-score">
                   <strong>{score.score}</strong>
                   <span>
-                    {score.correctAnswers}/{score.totalQuestions} validations auto
+                    {score.correctAnswers}/{score.totalQuestions} vannes qui passent
                   </span>
-                  <span>{score.donationPoints} points solidaires</span>
+                  <span>{score.donationPoints} points de rire</span>
                 </div>
                 <time>{formatDate(score.createdAt)}</time>
               </article>
@@ -86,12 +86,12 @@ export default function Leaderboard() {
         <div className="panel-heading">
           <div>
             <p className="eyebrow">Progression</p>
-            <h2>Scores par categorie</h2>
+            <h2>Tes meilleurs scores par thème</h2>
           </div>
         </div>
 
         {progress.length === 0 ? (
-          <p className="empty-state">Les graphiques apparaitront apres les premieres parties.</p>
+          <p className="empty-state">Les courbes arriveront après tes premiers passages.</p>
         ) : (
           <div className="progress-list">
             {progress.map((item) => {
@@ -100,7 +100,7 @@ export default function Leaderboard() {
                 <div className="progress-row" key={item.category}>
                   <div>
                     <strong>{item.category}</strong>
-                    <span>{item.games} partie{item.games > 1 ? 's' : ''}</span>
+                    <span>{item.games} passage{item.games > 1 ? 's' : ''}</span>
                   </div>
                   <div className="progress-bar">
                     <span style={{ width: `${width}%` }} />
@@ -111,7 +111,7 @@ export default function Leaderboard() {
                   </div>
                   <div>
                     <strong>{item.donationPoints}</strong>
-                    <span>points solidaires</span>
+                    <span>points de rire</span>
                   </div>
                 </div>
               )

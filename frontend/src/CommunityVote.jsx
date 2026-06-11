@@ -12,12 +12,12 @@ function formatDate(value) {
 
 function statusLabel(status) {
   if (status === 'accepted') {
-    return 'Points confirmes'
+    return 'A fait rire 😂'
   }
   if (status === 'rejected') {
-    return 'Points refuses'
+    return 'Bide total'
   }
-  return 'En vote'
+  return 'Sur scène'
 }
 
 export default function CommunityVote({ onVoteSaved }) {
@@ -36,7 +36,7 @@ export default function CommunityVote({ onVoteSaved }) {
       const data = await fetchPublicExplanations(36)
       setItems(data)
     } catch (err) {
-      setError(err.message || 'Votes indisponibles')
+      setError(err.message || 'Le jury est aux abonnés absents')
     } finally {
       setLoading(false)
     }
@@ -49,7 +49,7 @@ export default function CommunityVote({ onVoteSaved }) {
   async function handleVote(explanationId, approve) {
     const cleanName = voterName.trim()
     if (cleanName.length < 2) {
-      setError('Entre un pseudo de votant avant de voter.')
+      setError('Entre ton nom de juré avant de voter.')
       return
     }
 
@@ -60,10 +60,10 @@ export default function CommunityVote({ onVoteSaved }) {
     try {
       const updated = await voteExplanation(explanationId, cleanName, approve)
       setItems((current) => current.map((item) => (item.id === explanationId ? updated : item)))
-      setMessage('Vote enregistre.')
+      setMessage('Verdict enregistré.')
       await onVoteSaved()
     } catch (err) {
-      setError(err.message || 'Vote impossible')
+      setError(err.message || 'Verdict impossible à enregistrer')
     } finally {
       setVotingId(null)
     }
@@ -74,8 +74,8 @@ export default function CommunityVote({ onVoteSaved }) {
       <section className="vote-panel">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Vote communautaire</p>
-            <h2>Qui merite ses points ?</h2>
+            <p className="eyebrow">Le jury du public 🎙️</p>
+            <h2>Qui t'a fait rire ?</h2>
           </div>
           <button type="button" className="button" onClick={loadExplanations} disabled={loading}>
             Actualiser
@@ -83,7 +83,7 @@ export default function CommunityVote({ onVoteSaved }) {
         </div>
 
         <label className="form-field vote-name-field">
-          Ton pseudo de votant
+          Ton nom de juré
           <input
             value={voterName}
             onChange={(event) => setVoterName(event.target.value)}
@@ -96,9 +96,9 @@ export default function CommunityVote({ onVoteSaved }) {
         {error && <p className="form-error">{error}</p>}
 
         {loading ? (
-          <p className="empty-state">Chargement des explications...</p>
+          <p className="empty-state">Les vannes arrivent en coulisses...</p>
         ) : items.length === 0 ? (
-          <p className="empty-state">Aucune explication a arbitrer pour le moment.</p>
+          <p className="empty-state">Aucune vanne à juger pour le moment. La scène est libre !</p>
         ) : (
           <div className="vote-feed">
             {items.map((item) => (
@@ -114,7 +114,7 @@ export default function CommunityVote({ onVoteSaved }) {
                 </header>
 
                 <div className="answer-reveal answer-reveal--compact">
-                  <span>Reponse defendue</span>
+                  <span>La réponse mise en boîte</span>
                   <strong>{item.correctAnswer}</strong>
                 </div>
 
@@ -123,22 +123,22 @@ export default function CommunityVote({ onVoteSaved }) {
                 <div className="vote-meta">
                   <span>Par {item.playerName}</span>
                   <span>{formatDate(item.createdAt)}</span>
-                  <span>{item.proposedPoints} points proposes</span>
-                  <span>{item.validatedPoints} points confirmes</span>
+                  <span>{item.proposedPoints} points en jeu</span>
+                  <span>{item.validatedPoints} points validés par la salle</span>
                 </div>
 
                 <div className="vote-score">
                   <div>
                     <strong>{item.approveVotes}</strong>
-                    <span>pour</span>
+                    <span>rires</span>
                   </div>
                   <div>
                     <strong>{item.rejectVotes}</strong>
-                    <span>contre</span>
+                    <span>bides</span>
                   </div>
                   <div>
                     <strong>{item.totalVotes}</strong>
-                    <span>votes</span>
+                    <span>verdicts</span>
                   </div>
                 </div>
 
@@ -149,7 +149,7 @@ export default function CommunityVote({ onVoteSaved }) {
                     disabled={votingId === item.id}
                     onClick={() => handleVote(item.id, true)}
                   >
-                    Merite les points
+                    😂 Ça m'a fait rire
                   </button>
                   <button
                     type="button"
@@ -157,7 +157,7 @@ export default function CommunityVote({ onVoteSaved }) {
                     disabled={votingId === item.id}
                     onClick={() => handleVote(item.id, false)}
                   >
-                    Refuser les points
+                    Bof, bide
                   </button>
                 </div>
               </article>

@@ -27,7 +27,7 @@ const NAV_ITEMS = [
   { id: 'home', label: 'Accueil' },
   { id: 'play', label: 'Jouer' },
   { id: 'leaderboard', label: 'Classement' },
-  { id: 'votes', label: 'Votes' },
+  { id: 'votes', label: 'Le jury' },
 ]
 
 function AccountMenu({ user, onNavigate, onLogout }) {
@@ -180,7 +180,7 @@ export default function App() {
         <div className="brand-lockup">
           <span className="brand-mark">QA</span>
           <div>
-            <p className="eyebrow">Quiz argumenté</p>
+            <p className="eyebrow">Concours de vannes</p>
             <h1 style={{ fontSize: '1.6rem' }}>Quiz Arena</h1>
           </div>
         </div>
@@ -222,7 +222,7 @@ export default function App() {
           <main className="page-grid">
             <section className="quiz-panel">
               <p className="eyebrow">Chargement</p>
-              <h2>Connexion au backend...</h2>
+              <h2>On chauffe la salle...</h2>
             </section>
           </main>
         ) : view === 'home' ? (
@@ -243,15 +243,15 @@ export default function App() {
               </div>
               <div>
                 <strong>{stats.donationPoints}</strong>
-                <span>points solidaires</span>
+                <span>points de rire</span>
               </div>
               <div>
                 <strong>{stats.explanationCount}</strong>
-                <span>explications</span>
+                <span>vannes lâchées</span>
               </div>
               <div>
                 <strong>{stats.voteCount}</strong>
-                <span>votes publics</span>
+                <span>votes du public</span>
               </div>
             </section>
           </>
