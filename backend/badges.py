@@ -1,10 +1,3 @@
-"""Badge catalogue + evaluation.
-
-Pure functions: given a user's aggregated stats (see database.get_user_aggregates),
-decide which badge codes are earned. Awarding/persisting is done by the caller.
-"""
-
-# Ordered catalogue. `icon` is an emoji so the frontend needs no asset pipeline.
 BADGES = [
     {
         "code": "first_game",

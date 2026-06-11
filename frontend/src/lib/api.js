@@ -44,13 +44,6 @@ export async function fetchRandomQuestion(category, excludedIds = []) {
   return apiFetch(`/question${query}`)
 }
 
-export async function submitAnswer(questionId, answer) {
-  return apiFetch('/answer', {
-    method: 'POST',
-    body: JSON.stringify({ id: questionId, answer }),
-  })
-}
-
 export async function submitExplanation(questionId, explanation, playerName) {
   return apiFetch('/explanation', {
     method: 'POST',
@@ -114,8 +107,6 @@ export async function fetchBadgeCatalogue() {
   return apiFetch('/badges')
 }
 
-// L'admin s'authentifie comme n'importe quel utilisateur : le serveur
-// vérifie role='admin' sur chaque endpoint /admin/* (401/403 sinon).
 export async function fetchAdminQuestions() {
   return apiFetch('/admin/questions')
 }

@@ -22,7 +22,6 @@ const emptyStats = {
   voteCount: 0,
 }
 
-// Navigation publique : identique pour tous. L'accès admin vit dans le menu compte.
 const NAV_ITEMS = [
   { id: 'home', label: 'Accueil' },
   { id: 'play', label: 'Jouer' },
@@ -140,7 +139,6 @@ export default function App() {
     loadStats()
   }, [loadStats])
 
-  // Garde de route : les vues protégées ne restent jamais affichées sans le bon rôle.
   useEffect(() => {
     if (!ready) {
       return

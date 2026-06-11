@@ -386,18 +386,13 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
               </span>
             </div>
 
-            <div className="answer-reveal">
-              <span>La réponse à mettre en boîte</span>
-              <strong>{currentQuestion.correctAnswer}</strong>
-            </div>
-
             <form className="explanation-form" onSubmit={handleExplanationSubmit}>
               <label className="form-field">
                 Ta vanne
                 <textarea
                   value={explanation}
                   onChange={(event) => setExplanation(event.target.value)}
-                  placeholder="Balance la version la plus drôle de cette réponse..."
+                  placeholder="Sors ta meilleure vanne sur cette question..."
                   disabled={Boolean(result) || loading}
                   required
                 />
@@ -416,7 +411,7 @@ export default function FrontOffice({ stats, onScoreSaved, onOpenLeaderboard, on
                 <span>
                   {result.correct
                     ? `+${result.points} points provisoires, le jury du public tranche`
-                    : result.expectedExplanation}
+                    : 'Pas assez drôle pour le public, retente ta chance !'}
                 </span>
                 <small>Vanne envoyée #{result.explanationId}. Le public vote dans l'onglet Le jury.</small>
                 {result.matchedKeywords?.length > 0 && (

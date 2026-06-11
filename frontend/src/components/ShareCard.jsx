@@ -5,7 +5,6 @@ function buildShareText({ playerName, score, successRate, category }) {
   return `🎤 ${playerName} vient de décrocher ${score} points sur ${APP_NAME} (${successRate}% de rires, thème ${category}) ! À toi de sortir une vanne plus drôle.`
 }
 
-// Draws the result as a 1200x630 PNG using a plain canvas (no dependency).
 function drawCard({ playerName, score, successRate, category, donationPoints }) {
   const canvas = document.createElement('canvas')
   canvas.width = 1200
@@ -18,7 +17,6 @@ function drawCard({ playerName, score, successRate, category, donationPoints }) 
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, 1200, 630)
 
-  // halos discrets
   const blob = (x, y, r, color) => {
     const g = ctx.createRadialGradient(x, y, 0, x, y, r)
     g.addColorStop(0, color)

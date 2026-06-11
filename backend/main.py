@@ -1,6 +1,5 @@
 import logging
 import os
-import random
 import re
 import unicodedata
 from contextlib import asynccontextmanager
@@ -96,11 +95,6 @@ class RegisterPayload(BaseModel):
 class LoginPayload(BaseModel):
     pseudo: str = Field(..., min_length=2, max_length=40)
     password: str = Field(..., min_length=1, max_length=128)
-
-
-class AnswerPayload(BaseModel):
-    id: int
-    answer: str = Field(..., min_length=1, max_length=200)
 
 
 class ExplanationPayload(BaseModel):
@@ -371,37 +365,14 @@ def get_random_question(categorie: str | None = None, exclude: str | None = None
         raise HTTPException(status_code=404, detail="Aucune question trouvee")
 
     question = row_to_question(row)
-    answers = [question["correctAnswer"], *question["wrongAnswers"]]
-    random.shuffle(answers)
 
     return {
         "id": question["id"],
         "category": question["category"],
         "points": question["points"],
         "prompt": question["prompt"],
-        "correctAnswer": question["correctAnswer"],
-        "explanation": question["explanation"],
-        "answers": answers,
     }
 
-
-@app.post("/api/answer")
-def check_answer(payload: AnswerPayload):
-    with get_db() as conn:
-        row = conn.execute(
-            "SELECT correct_answer, points FROM question WHERE id = %s",
-            (payload.id,),
-        ).fetchone()
-
-    if not row:
-        raise HTTPException(status_code=404, detail="Question non trouvee")
-
-    correct = payload.answer == row["correct_answer"]
-    return {
-        "correct": correct,
-        "correctAnswer": row["correct_answer"],
-        "points": row["points"] if correct else 0,
-    }
 
 
 @app.post("/api/explanation", dependencies=[rate_limit("explanation", 30, 60)])
@@ -466,10 +437,8 @@ def check_explanation(payload: ExplanationPayload, current_user: dict | None = D
 
     return {
         "correct": is_valid,
-        "correctAnswer": row["correct_answer"],
         "points": row["points"] if is_valid else 0,
         "proposedPoints": row["points"],
-        "expectedExplanation": row["explanation"],
         "explanationId": public_explanation["id"],
         "matchedKeywords": matched,
         "requiredMatches": required_matches,
@@ -754,12 +723,6 @@ def get_profile(current_user: dict = Depends(require_user_session)):
             for row in progress_rows
         ],
     }
-
-
-# ---------------------------------------------------------------------------
-# Back-office : tous les endpoints exigent une session utilisateur role='admin'.
-# Plus aucun mot de passe admin partagé ni session admin séparée.
-# ---------------------------------------------------------------------------
 
 
 @app.get("/api/admin/questions")

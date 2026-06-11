@@ -1,12 +1,11 @@
-// Couleur déterministe par catégorie (palette feutrée, partagée entre vues).
 const PALETTE = [
-  '#c9a85c', // laiton
-  '#8d9db1', // ardoise
-  '#9db884', // sauge
-  '#c2795a', // terre cuite
-  '#a87e8e', // vieux rose
-  '#6f9a93', // céladon
-  '#b9b0a0', // sable
+  '#c9a85c',
+  '#8d9db1',
+  '#9db884',
+  '#c2795a',
+  '#a87e8e',
+  '#6f9a93',
+  '#b9b0a0',
 ]
 
 export function getCategoryColor(category) {
@@ -18,5 +17,5 @@ export function getCategoryColor(category) {
 }
 
 export function categoryLabel(category) {
-  return category || 'Toutes les catégories'
+  return category || 'Tous les thèmes'
 }

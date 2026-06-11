@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 
-// Lightweight toast stack. `toasts` is an array of { id, icon, title, message, variant }.
 export default function ToastStack({ toasts, onDismiss }) {
   useEffect(() => {
     if (toasts.length === 0) {

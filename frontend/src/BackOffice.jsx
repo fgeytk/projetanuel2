@@ -142,7 +142,6 @@ export default function BackOffice({ categories, onDataChange }) {
     }
   }, [isAdmin])
 
-  // Défense en profondeur : le serveur refuse déjà (401/403), l'UI n'affiche rien sans rôle admin.
   if (!ready) {
     return (
       <main className="page-grid">

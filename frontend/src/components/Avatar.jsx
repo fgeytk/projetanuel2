@@ -1,4 +1,3 @@
-// Avatar déterministe à partir d'un seed — palette feutrée, aucune dépendance.
 const GRADIENTS = [
   ['#8a7a5c', '#c9a85c'],
   ['#5c6b7a', '#8d9db1'],

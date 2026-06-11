@@ -1,4 +1,3 @@
-// Renders a grid of badges. Each badge: { code, name, description, icon, unlocked }.
 export default function BadgeGrid({ badges }) {
   if (!badges || badges.length === 0) {
     return <p className="empty-state">Les badges apparaîtront en jouant.</p>
