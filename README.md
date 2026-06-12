@@ -87,7 +87,6 @@ Un guide de deploiement sur VM Google Cloud est fourni dans `DEPLOY_GCP_VM.md`.
 | --- | --- | --- |
 | Site | http://localhost:3000 | Jouer, voter, voir le classement |
 | API | http://localhost:8000 | Backend Python |
-| Documentation API | http://localhost:8000/docs | Tester les routes |
 | Adminer | http://localhost:8080 | Consulter la base PostgreSQL |
 
 ## Scenario de demonstration
