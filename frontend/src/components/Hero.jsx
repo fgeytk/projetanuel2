@@ -1,4 +1,5 @@
 import { ASSOCIATION_NAME } from '../lib/constants.js'
+import unicefLogo from '../unicef.png'
 
 export default function Hero({ stats, user, onPlay, onOpenAuth }) {
   return (
@@ -31,6 +32,12 @@ export default function Hero({ stats, user, onPlay, onOpenAuth }) {
       </div>
 
       <div className="hero__impact">
+        <div className="hero__partner" aria-label={`Soutien symbolique pour ${ASSOCIATION_NAME}`}>
+          <span>Au profit de</span>
+          <div className="hero__partner-logo">
+            <img src={unicefLogo} alt={`Logo ${ASSOCIATION_NAME}`} decoding="async" />
+          </div>
+        </div>
         <span className="impact-counter">{stats.donationPoints ?? 0}</span>
         <strong>points de rire récoltés</strong>
         <small>

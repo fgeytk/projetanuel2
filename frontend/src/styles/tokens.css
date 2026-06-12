@@ -1,60 +1,60 @@
 /* ============================================================
-   Quiz Brain — Design tokens (thème "Atelier nocturne")
-   Encre chaude, ivoire, laiton. Une seule source de vérité.
-   Les noms historiques (--cyan, --magenta…) sont conservés comme
-   alias sémantiques : accent / secondaire / neutre / succès.
+   Quiz Brain - Design tokens (theme "Stand-up dore")
+   Palette inspiree du logo UNICEF fourni: or, scene noire,
+   reflets chauds et petit accent bleu.
+   Les noms historiques (--cyan, --magenta...) restent des alias.
    ============================================================ */
 
 :root {
-  /* --- Fonds (encre chaude, du plus profond au plus clair) --- */
-  --bg-900: #100f0d;
-  --bg-800: #161412;
-  --bg-700: #1d1a17;
-  --bg-600: #262219;
-  --bg-panel: rgba(24, 22, 19, 0.92);
-  --bg-raised: rgba(34, 30, 25, 0.95);
+  /* --- Fonds: scene sombre pour faire ressortir le logo dore --- */
+  --bg-900: #0f0b08;
+  --bg-800: #17100b;
+  --bg-700: #24180d;
+  --bg-600: #3a240e;
+  --bg-panel: rgba(36, 24, 13, 0.92);
+  --bg-raised: rgba(54, 34, 13, 0.96);
 
   /* --- Filets --- */
-  --stroke: rgba(228, 217, 196, 0.1);
-  --stroke-strong: rgba(228, 217, 196, 0.22);
+  --stroke: rgba(255, 207, 77, 0.18);
+  --stroke-strong: rgba(255, 196, 42, 0.44);
 
   /* --- Accents (alias historiques) --- */
-  --cyan: #c9a85c;     /* accent principal : laiton */
-  --magenta: #c2795a;  /* secondaire : terre cuite */
-  --violet: #8d9db1;   /* neutre froid : ardoise */
-  --lime: #9db884;     /* succès : sauge */
-  --amber: #d9b36a;
-  --danger: #d96c6c;
+  --cyan: #ffc42a;     /* accent principal: or du logo */
+  --magenta: #ff8a1f;  /* secondaire: reflet cuivre */
+  --violet: #56c7ff;   /* accent froid: clin d'oeil UNICEF */
+  --lime: #ffe66d;     /* succes: champagne lumineux */
+  --amber: #f4b000;
+  --danger: #ff6b6b;
 
-  --success-border: rgba(157, 184, 132, 0.38);
-  --success-bg: rgba(157, 184, 132, 0.08);
-  --success-strong: #c3d6ad;
+  --success-border: rgba(255, 230, 109, 0.44);
+  --success-bg: rgba(255, 230, 109, 0.1);
+  --success-strong: #fff0a3;
 
-  --brand: linear-gradient(135deg, #d9b36a, #c2795a);
-  --brand-violet: linear-gradient(135deg, #8d9db1, #c2795a);
+  --brand: linear-gradient(135deg, #fff2a8 0%, #ffc42a 45%, #b86b00 100%);
+  --brand-violet: linear-gradient(135deg, #fff2a8 0%, #ffc42a 52%, #56c7ff 100%);
 
   /* --- Texte --- */
-  --t-100: #f2ede2;
-  --t-300: #b9b0a0;
-  --t-500: #8d8578;
+  --t-100: #fff9ed;
+  --t-300: #e7cfa1;
+  --t-500: #b7975b;
 
-  /* --- Ombres (plus de glow néon : profondeur douce) --- */
-  --glow-cyan: 0 8px 24px rgba(0, 0, 0, 0.35);
-  --glow-magenta: 0 8px 24px rgba(0, 0, 0, 0.35);
-  --glow-violet: 0 8px 24px rgba(0, 0, 0, 0.35);
-  --glow-lime: 0 8px 24px rgba(0, 0, 0, 0.35);
-  --shadow-panel: 0 16px 44px rgba(0, 0, 0, 0.45);
-  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.32);
+  /* --- Ombres: halo de projecteur + relief lisible --- */
+  --glow-cyan: 0 0 0 3px rgba(255, 196, 42, 0.2), 0 14px 34px rgba(255, 196, 42, 0.22);
+  --glow-magenta: 0 0 0 3px rgba(255, 138, 31, 0.2), 0 14px 34px rgba(255, 138, 31, 0.22);
+  --glow-violet: 0 0 0 3px rgba(86, 199, 255, 0.18), 0 14px 34px rgba(86, 199, 255, 0.18);
+  --glow-lime: 0 0 0 3px rgba(255, 230, 109, 0.2), 0 14px 34px rgba(255, 230, 109, 0.2);
+  --shadow-panel: 8px 10px 0 rgba(0, 0, 0, 0.36), 0 24px 54px rgba(8, 5, 2, 0.56);
+  --shadow-soft: 5px 6px 0 rgba(0, 0, 0, 0.3), 0 14px 30px rgba(8, 5, 2, 0.42);
 
-  --focus-ring: 0 0 0 3px rgba(201, 168, 92, 0.28);
+  --focus-ring: 0 0 0 3px rgba(255, 196, 42, 0.34), 0 0 0 6px rgba(86, 199, 255, 0.18);
 
-  /* --- Rayons (plus serrés, moins "app template") --- */
-  --r-sm: 6px;
-  --r-md: 10px;
-  --r-lg: 14px;
+  /* --- Rayons: formes ludiques, pas corporate --- */
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 26px;
   --r-pill: 999px;
 
-  /* --- Échelle d'espacement --- */
+  /* --- Echelle d'espacement --- */
   --s-1: 4px;
   --s-2: 8px;
   --s-3: 12px;
@@ -68,9 +68,9 @@
   --t-fast: 120ms;
   --t-base: 220ms;
   --t-slow: 420ms;
-  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease: cubic-bezier(0.24, 1.4, 0.34, 1);
 
-  /* --- Typographie : serif éditoriale + sans humaniste --- */
-  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
-  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* --- Typographie: headline blague, corps stable --- */
+  --font-display: "Comic Sans MS", "Trebuchet MS", "Fraunces", cursive;
+  --font-body: "Trebuchet MS", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }

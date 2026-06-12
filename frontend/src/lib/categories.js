@@ -1,16 +1,16 @@
 const PALETTE = [
-  '#c9a85c',
-  '#8d9db1',
-  '#9db884',
-  '#c2795a',
-  '#a87e8e',
-  '#6f9a93',
-  '#b9b0a0',
+  '#ffc42a',
+  '#56c7ff',
+  '#ffe66d',
+  '#ff8a1f',
+  '#d98a00',
+  '#e7cfa1',
+  '#f4b000',
 ]
 
 export function getCategoryColor(category) {
   if (!category) {
-    return '#c9a85c'
+    return '#ffc42a'
   }
   const index = [...category].reduce((total, char) => total + char.charCodeAt(0), 0) % PALETTE.length
   return PALETTE[index]

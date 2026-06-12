@@ -12,8 +12,8 @@ function drawCard({ playerName, score, successRate, category, donationPoints }) 
   const ctx = canvas.getContext('2d')
 
   const bg = ctx.createLinearGradient(0, 0, 1200, 630)
-  bg.addColorStop(0, '#100f0d')
-  bg.addColorStop(1, '#1d1a17')
+  bg.addColorStop(0, '#0f0b08')
+  bg.addColorStop(1, '#24180d')
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, 1200, 630)
 
@@ -24,34 +24,35 @@ function drawCard({ playerName, score, successRate, category, donationPoints }) 
     ctx.fillStyle = g
     ctx.fillRect(0, 0, 1200, 630)
   }
-  blob(1000, 80, 360, 'rgba(217,179,106,0.18)')
-  blob(120, 560, 360, 'rgba(141,157,177,0.14)')
+  blob(1000, 80, 360, 'rgba(255,196,42,0.22)')
+  blob(120, 560, 360, 'rgba(86,199,255,0.14)')
 
   ctx.textBaseline = 'top'
-  ctx.fillStyle = '#c9a85c'
+  ctx.fillStyle = '#ffc42a'
   ctx.font = '700 28px Inter, sans-serif'
   ctx.fillText(`${APP_NAME.toUpperCase()} · LE CONCOURS DE VANNES`, 80, 80)
 
-  ctx.fillStyle = '#f2ede2'
+  ctx.fillStyle = '#fff9ed'
   ctx.font = '600 64px Fraunces, Georgia, serif'
   ctx.fillText(playerName, 80, 140)
 
   const scoreGrad = ctx.createLinearGradient(80, 0, 600, 0)
-  scoreGrad.addColorStop(0, '#d9b36a')
-  scoreGrad.addColorStop(1, '#c2795a')
+  scoreGrad.addColorStop(0, '#fff2a8')
+  scoreGrad.addColorStop(0.45, '#ffc42a')
+  scoreGrad.addColorStop(1, '#b86b00')
   ctx.fillStyle = scoreGrad
   ctx.font = '700 180px Fraunces, Georgia, serif'
   ctx.fillText(`${score}`, 76, 250)
-  ctx.fillStyle = '#b9b0a0'
+  ctx.fillStyle = '#e7cfa1'
   ctx.font = '600 40px Inter, sans-serif'
   ctx.fillText('points', 80, 470)
 
-  ctx.fillStyle = '#f2ede2'
+  ctx.fillStyle = '#fff9ed'
   ctx.font = '600 34px Inter, sans-serif'
   ctx.textAlign = 'right'
   ctx.fillText(`${successRate}% de rires`, 1120, 300)
   ctx.fillText(`Thème : ${category}`, 1120, 350)
-  ctx.fillStyle = '#9db884'
+  ctx.fillStyle = '#ffe66d'
   ctx.fillText(`${donationPoints} points de rire`, 1120, 400)
   ctx.textAlign = 'left'
 
