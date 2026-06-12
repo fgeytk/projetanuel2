@@ -33,7 +33,7 @@ export default function Hero({ stats, user, onPlay, onOpenAuth }) {
 
       <div className="hero__impact">
         <div className="hero__partner" aria-label={`Soutien symbolique pour ${ASSOCIATION_NAME}`}>
-          <span>Au profit de</span>
+          <span>Au profit d'</span>
           <div className="hero__partner-logo">
             <img src={unicefLogo} alt={`Logo ${ASSOCIATION_NAME}`} decoding="async" />
           </div>
