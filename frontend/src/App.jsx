@@ -10,6 +10,7 @@ import Hero from './components/Hero.jsx'
 import ToastStack from './components/Toast.jsx'
 import { useAuth } from './lib/AuthContext.jsx'
 import { fetchStats } from './lib/api.js'
+import smileyGif from './smiley.gif'
 
 const emptyStats = {
   categories: [],
@@ -26,7 +27,7 @@ const NAV_ITEMS = [
   { id: 'home', label: 'Accueil' },
   { id: 'play', label: 'Jouer' },
   { id: 'leaderboard', label: 'Classement' },
-  { id: 'votes', label: 'Le jury' },
+  { id: 'votes', label: 'Votes' },
 ]
 
 function AccountMenu({ user, onNavigate, onLogout }) {
@@ -176,7 +177,9 @@ export default function App() {
 
       <header className="app-header">
         <div className="brand-lockup">
-          <span className="brand-mark">QA</span>
+          <span className="brand-mark">
+            <img src={smileyGif} alt="Logo de Quiz Brain" width="40" height="40" />
+          </span>
           <div>
             <p className="eyebrow">Concours de vannes</p>
             <h1 style={{ fontSize: '1.6rem' }}>Quiz Brain</h1>
